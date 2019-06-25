@@ -14,23 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "621E66611C72958800A0F352"
-               BuildableName = "SwiftGit2.framework"
-               BlueprintName = "SwiftGit2-iOS"
-               ReferencedContainer = "container:SwiftGit2.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "C9CE0DD21E0710BD0053205D"
-               BuildableName = "SwiftLint"
-               BlueprintName = "SwiftLint"
+               BlueprintIdentifier = "621E66ED1C729EBB00A0F352"
+               BuildableName = "libssh2.a"
+               BlueprintName = "libssh2-iOS"
                ReferencedContainer = "container:SwiftGit2.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -42,26 +28,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "621E66B61C72958D00A0F352"
-               BuildableName = "SwiftGit2-iOSTests.xctest"
-               BlueprintName = "SwiftGit2-iOSTests"
-               ReferencedContainer = "container:SwiftGit2.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "621E66611C72958800A0F352"
-            BuildableName = "SwiftGit2.framework"
-            BlueprintName = "SwiftGit2-iOS"
-            ReferencedContainer = "container:SwiftGit2.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>
@@ -78,9 +45,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "621E66611C72958800A0F352"
-            BuildableName = "SwiftGit2.framework"
-            BlueprintName = "SwiftGit2-iOS"
+            BlueprintIdentifier = "621E66ED1C729EBB00A0F352"
+            BuildableName = "libssh2.a"
+            BlueprintName = "libssh2-iOS"
             ReferencedContainer = "container:SwiftGit2.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -96,9 +63,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "621E66611C72958800A0F352"
-            BuildableName = "SwiftGit2.framework"
-            BlueprintName = "SwiftGit2-iOS"
+            BlueprintIdentifier = "621E66ED1C729EBB00A0F352"
+            BuildableName = "libssh2.a"
+            BlueprintName = "libssh2-iOS"
             ReferencedContainer = "container:SwiftGit2.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

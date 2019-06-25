@@ -1,13 +1,16 @@
 #!/bin/sh
 
 set -e
-
+set -x
 # augment path to help it find cmake installed in /usr/local/bin,
 # e.g. via brew. Xcode's Run Script phase doesn't seem to honor
 # ~/.MacOSX/environment.plist
 PATH="/usr/local/bin:$PATH"
+export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/opt/openssl/lib/pkgconfig"
 
-if [ "External/libgit2.a" -nt "External/libgit2" ]
+product="libgit2.dylib"
+
+if [ "External/${product}" -nt "External/libgit2" ]
 then
     echo "No update needed."
     exit 0
@@ -22,17 +25,13 @@ fi
 mkdir build
 cd build
 
-cmake -DBUILD_SHARED_LIBS:BOOL=OFF \
+cmake -DBUILD_SHARED_LIBS:BOOL=ON \
     -DLIBSSH2_INCLUDE_DIRS:PATH=/usr/local/include/ \
     -DBUILD_CLAR:BOOL=OFF \
     -DTHREADSAFE:BOOL=ON \
     ..
 cmake --build .
 
-product="libgit2.a"
-install_path="../../${product}"
-if [ "${product}" -nt "${install_path}" ]; then
-    cp -v "${product}" "${install_path}"
-fi
+cp -av lib*.dylib ../..
 
 echo "libgit2 has been updated."

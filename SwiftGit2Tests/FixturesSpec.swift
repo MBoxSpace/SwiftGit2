@@ -9,13 +9,13 @@
 import Quick
 
 class FixturesSpec: QuickSpec {
-	override func spec() {
-		beforeSuite {
-			Fixtures.sharedInstance.setUp()
-		}
+    override func spec() {
+        beforeSuite {
+            Fixtures.sharedInstance.setUp()
+        }
 
-		afterSuite {
-			Fixtures.sharedInstance.tearDown()
-		}
-	}
+        afterSuite {
+            Fixtures.sharedInstance.tearDown()
+        }
+    }
 }

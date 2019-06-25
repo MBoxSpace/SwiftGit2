@@ -4,28 +4,28 @@ import libgit2
 public let libGit2ErrorDomain = "org.libgit2.libgit2"
 
 internal extension NSError {
-	/// Returns an NSError with an error domain and message for libgit2 errors.
-	///
-	/// :param: errorCode An error code returned by a libgit2 function.
-	/// :param: libGit2PointOfFailure The name of the libgit2 function that produced the
-	///         error code.
-	/// :returns: An NSError with a libgit2 error domain, code, and message.
-	convenience init(gitError errorCode: Int32, pointOfFailure: String? = nil) {
-		let code = Int(errorCode)
-		var userInfo: [String: String] = [:]
+    /// Returns an NSError with an error domain and message for libgit2 errors.
+    ///
+    /// :param: errorCode An error code returned by a libgit2 function.
+    /// :param: libGit2PointOfFailure The name of the libgit2 function that produced the
+    ///         error code.
+    /// :returns: An NSError with a libgit2 error domain, code, and message.
+    convenience init(gitError errorCode: Int32, pointOfFailure: String? = nil) {
+        let code = Int(errorCode)
+        var userInfo: [String: String] = [:]
 
-		if let message = errorMessage(errorCode) {
-			userInfo[NSLocalizedDescriptionKey] = message
-		} else {
-			userInfo[NSLocalizedDescriptionKey] = "Unknown libgit2 error."
-		}
+        if let message = errorMessage(errorCode) {
+            userInfo[NSLocalizedDescriptionKey] = message
+        } else {
+            userInfo[NSLocalizedDescriptionKey] = "Unknown libgit2 error."
+        }
 
-		if let pointOfFailure = pointOfFailure {
-			userInfo[NSLocalizedFailureReasonErrorKey] = "\(pointOfFailure) failed."
-		}
+        if let pointOfFailure = pointOfFailure {
+            userInfo[NSLocalizedFailureReasonErrorKey] = "\(pointOfFailure) failed."
+        }
 
-		self.init(domain: libGit2ErrorDomain, code: code, userInfo: userInfo)
-	}
+        self.init(domain: libGit2ErrorDomain, code: code, userInfo: userInfo)
+    }
 }
 
 /// Returns the libgit2 error message for the given error code.
@@ -39,12 +39,23 @@ internal extension NSError {
 ///           corresponding string representation of that error. Otherwise, it returns
 ///           nil.
 private func errorMessage(_ errorCode: Int32) -> String? {
-	let last = giterr_last()
-	if let lastErrorPointer = last {
-		return String(validatingUTF8: lastErrorPointer.pointee.message)
-	} else if UInt32(errorCode) == GITERR_OS.rawValue {
-		return String(validatingUTF8: strerror(errno))
-	} else {
-		return nil
-	}
+    let last = giterr_last()
+    if let lastErrorPointer = last {
+        return String(validatingUTF8: lastErrorPointer.pointee.message)
+    } else if UInt32(errorCode) == GITERR_OS.rawValue {
+        return String(validatingUTF8: strerror(errno))
+    } else {
+        return nil
+    }
+}
+
+public extension Result {
+    var isSuccess: Bool {
+        switch self {
+        case .success:
+            return true
+        default:
+            return false
+        }
+    }
 }

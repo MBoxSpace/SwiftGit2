@@ -23,6 +23,7 @@ External/libgit2*.a
 External/ios-openssl
 External/libgit2-ios
 External/libssh2-ios
+Carthage/
 
 ### fastlane ###
 # fastlane - A streamlined workflow tool for Cocoa deployment
@@ -40,3 +41,4 @@ fastlane/screenshots/screenshots.html
 # scan temporary files
 fastlane/test_output
 test_output
+*.dylib
