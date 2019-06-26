@@ -16,6 +16,8 @@ then
     exit 0
 fi
 
+./script/clean_externals
+
 cd "External/libgit2"
 
 if [ -d "build" ]; then

@@ -9,14 +9,13 @@
 # these for you.
 #
 
-# A list of external static libraries included in the SwiftGit2 framework
+# A list of external libraries included in the SwiftGit2 framework
 libraries=(
-    External/libgit2.a
-    External/libgit2-ios/libgit2-ios.a
-    External/libssh2-ios/lib/libssh2-ios.a
-    External/ios-openssl/lib/libssl.a
-    External/ios-openssl/lib/libcrypto.a
-    External/ios-openssl/include
+    External/lib*.dylib
+    External/libgit2/build
+    External/openssl/lib/libssl.a
+    External/openssl/lib/libcrypto.a
+    External/openssl/include
 )
 
-rm -vrf "${libraries[@]}"
+rm -vrf ${libraries[@]}
