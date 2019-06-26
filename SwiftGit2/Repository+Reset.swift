@@ -42,7 +42,7 @@ public extension Repository {
         }
         var object: OpaquePointer? = nil
         var oid = ref.oid.oid
-        var result = git_object_lookup(&object, self.pointer, &oid, GIT_OBJ_ANY)
+        var result = git_object_lookup(&object, self.pointer, &oid, GIT_OBJECT_ANY)
         guard result == GIT_OK.rawValue else {
             return .failure(NSError(gitError: result, pointOfFailure: "git_object_lookup"))
         }
