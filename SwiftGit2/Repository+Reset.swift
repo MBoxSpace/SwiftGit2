@@ -29,7 +29,7 @@ public extension Repository {
 
     func reset(reference: ReferenceType? = nil,
                type: ResetType = .mixed,
-               progress: CheckoutProgressBlock? = nil) -> Result<(), NSError> {
+               progress: CheckoutOptions.ProgressBlock? = nil) -> Result<(), NSError> {
         let ref: ReferenceType
         if let reference = reference {
             ref = reference
@@ -47,7 +47,7 @@ public extension Repository {
             return .failure(NSError(gitError: result, pointOfFailure: "git_object_lookup"))
         }
 
-        var options = checkoutOptions(strategy: .Safe, progress: progress)
+        var options = CheckoutOptions(strategy: .Safe, progress: progress).toGit()
 
         result = git_reset(self.pointer, object, type.git_type, &options)
         guard result == GIT_OK.rawValue else {

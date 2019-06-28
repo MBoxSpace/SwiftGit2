@@ -10,8 +10,6 @@ import SwiftGit2
 import Nimble
 import Quick
 
-// swiftlint:disable cyclomatic_complexity
-
 class RepositorySpec: FixturesSpec {
     override func spec() {
         describe("Repository.Type.at(_:)") {
@@ -25,173 +23,6 @@ class RepositorySpec: FixturesSpec {
                 let result = Repository.at(url)
                 expect(result.error?.domain) == libGit2ErrorDomain
                 expect(result.error?.localizedDescription).to(match("failed to resolve path"))
-            }
-        }
-
-        describe("Repository.Type.isValid(url:)") {
-            it("should return true if the repo exists") {
-                guard let repositoryURL = Fixtures.simpleRepository.directoryURL else {
-                    fail("Fixture setup broken: Repository does not exist"); return
-                }
-
-                let result = Repository.isValid(url: repositoryURL)
-
-                expect(result.error).to(beNil())
-
-                if case .success(let isValid) = result {
-                    expect(isValid).to(beTruthy())
-                }
-            }
-
-            it("should return false if the directory does not contain a repo") {
-                let tmpURL = URL(fileURLWithPath: "/dev/null")
-                let result = Repository.isValid(url: tmpURL)
-
-                expect(result.error).to(beNil())
-
-                if case .success(let isValid) = result {
-                    expect(isValid).to(beFalsy())
-                }
-            }
-
-            it("should return error if .git is not readable") {
-                let localURL = self.temporaryURL(forPurpose: "git-isValid-unreadable").appendingPathComponent(".git")
-                let nonReadablePermissions: [FileAttributeKey: Any] = [.posixPermissions: 0o077]
-                try! FileManager.default.createDirectory(
-                    at: localURL,
-                    withIntermediateDirectories: true,
-                    attributes: nonReadablePermissions)
-                let result = Repository.isValid(url: localURL)
-
-                expect(result.value).to(beNil())
-                expect(result.error).notTo(beNil())
-            }
-        }
-
-        describe("Repository.Type.create(at:)") {
-            it("should create a new repo at the specified location") {
-                let localURL = self.temporaryURL(forPurpose: "local-create")
-                let result = Repository.create(at: localURL)
-
-                expect(result.error).to(beNil())
-
-                if case .success(let clonedRepo) = result {
-                    expect(clonedRepo.directoryURL).notTo(beNil())
-                }
-            }
-        }
-
-        describe("Repository.Type.clone(from:to:)") {
-            it("should handle local clones") {
-                let remoteRepo = Fixtures.simpleRepository
-                let localURL = self.temporaryURL(forPurpose: "local-clone")
-                let result = Repository.clone(from: URL(string: "git@code.byted.org:ugc/AWEWebView.git")!,
-                                              to: localURL,
-                                              localClone: false,
-                                              credentials: .sshFile(username: "git", publicKeyPath: "/Users/whirlwind/.ssh/byted_rsa.pub", privateKeyPath: "/Users/whirlwind/.ssh/byted_rsa", passphrase: ""))
-
-                expect(result.error).to(beNil())
-
-                if case .success(let clonedRepo) = result {
-                    expect(clonedRepo.directoryURL).notTo(beNil())
-                }
-            }
-
-            it("should handle bare clones") {
-                let remoteRepo = Fixtures.simpleRepository
-                let localURL = self.temporaryURL(forPurpose: "bare-clone")
-                let result = Repository.clone(from: remoteRepo.directoryURL!,
-                                              to: localURL,
-                                              localClone: true,
-                                              bare: true)
-
-                expect(result.error).to(beNil())
-
-                if case .success(let clonedRepo) = result {
-                    expect(clonedRepo.directoryURL).to(beNil())
-                }
-            }
-
-            it("should have set a valid remote url") {
-                let remoteRepo = Fixtures.simpleRepository
-                let localURL = self.temporaryURL(forPurpose: "valid-remote-clone")
-                let cloneResult = Repository.clone(from: remoteRepo.directoryURL!, to: localURL, localClone: true)
-
-                expect(cloneResult.error).to(beNil())
-
-                if case .success(let clonedRepo) = cloneResult {
-                    let remoteResult = clonedRepo.remote(named: "origin")
-                    expect(remoteResult.error).to(beNil())
-
-                    if case .success(let remote) = remoteResult {
-                        expect(remote.URL).to(equal(remoteRepo.directoryURL?.absoluteString))
-                    }
-                }
-            }
-
-            it("should be able to clone a remote repository") {
-                let remoteRepoURL = URL(string: "https://github.com/libgit2/libgit2.github.com.git")
-                let localURL = self.temporaryURL(forPurpose: "public-remote-clone")
-                let cloneResult = Repository.clone(from: remoteRepoURL!, to: localURL)
-
-                expect(cloneResult.error).to(beNil())
-
-                if case .success(let clonedRepo) = cloneResult {
-                    let remoteResult = clonedRepo.remote(named: "origin")
-                    expect(remoteResult.error).to(beNil())
-
-                    if case .success(let remote) = remoteResult {
-                        expect(remote.URL).to(equal(remoteRepoURL?.absoluteString))
-                    }
-                }
-            }
-
-            it("should be able to clone a remote ssh repository") {
-                let remoteRepoURL = URL(string: "git@github.com:libgit2/libgit2.github.com.git")
-                let localURL = self.temporaryURL(forPurpose: "public-remote-ssh-clone")
-                let cloneResult = Repository.clone(from: remoteRepoURL!, to: localURL)
-
-                expect(cloneResult.error).to(beNil())
-
-                if case .success(let clonedRepo) = cloneResult {
-                    let remoteResult = clonedRepo.remote(named: "origin")
-                    expect(remoteResult.error).to(beNil())
-
-                    if case .success(let remote) = remoteResult {
-                        expect(remote.URL).to(equal(remoteRepoURL?.absoluteString))
-                    }
-                }
-            }
-
-            let env = ProcessInfo.processInfo.environment
-
-            if let privateRepo = env["SG2TestPrivateRepo"],
-               let gitUsername = env["SG2TestUsername"],
-               let publicKey = env["SG2TestPublicKey"],
-               let privateKey = env["SG2TestPrivateKey"],
-               let passphrase = env["SG2TestPassphrase"] {
-
-                it("should be able to clone a remote repository requiring credentials") {
-                    let remoteRepoURL = URL(string: privateRepo)
-                    let localURL = self.temporaryURL(forPurpose: "private-remote-clone")
-                    let credentials = Credentials.sshMemory(username: gitUsername,
-                                                            publicKey: publicKey,
-                                                            privateKey: privateKey,
-                                                            passphrase: passphrase)
-
-                    let cloneResult = Repository.clone(from: remoteRepoURL!, to: localURL, credentials: credentials)
-
-                    expect(cloneResult.error).to(beNil())
-
-                    if case .success(let clonedRepo) = cloneResult {
-                        let remoteResult = clonedRepo.remote(named: "origin")
-                        expect(remoteResult.error).to(beNil())
-
-                        if case .success(let remote) = remoteResult {
-                            expect(remote.URL).to(equal(remoteRepoURL?.absoluteString))
-                        }
-                    }
-                }
             }
         }
 
@@ -644,13 +475,13 @@ class RepositorySpec: FixturesSpec {
                 let oid = OID(string: "315b3f344221db91ddc54b269f3c9af422da0f2e")!
                 expect(repo.HEAD().value?.shortName).to(equal("master"))
 
-                expect(repo.checkout(oid, strategy: CheckoutStrategy.None).error).to(beNil())
+                expect(repo.checkout(oid, CheckoutOptions(strategy: .None)).error).to(beNil())
                 let HEAD = repo.HEAD().value
                 expect(HEAD?.longName).to(equal("HEAD"))
                 expect(HEAD?.oid).to(equal(oid))
 
                 expect(repo.checkout(repo.localBranch(named: "master").value!,
-                                     strategy: CheckoutStrategy.None).error).to(beNil())
+                                     CheckoutOptions(strategy: .None)).error).to(beNil())
                 expect(repo.HEAD().value?.shortName).to(equal("master"))
             }
 
@@ -659,9 +490,10 @@ class RepositorySpec: FixturesSpec {
                 let oid = OID(string: "315b3f344221db91ddc54b269f3c9af422da0f2e")!
                 expect(repo.HEAD().value?.shortName).to(equal("master"))
 
-                expect(repo.checkout(oid, strategy: .None, progress: { (_, completedSteps, totalSteps) -> Void in
+                let options = CheckoutOptions(strategy: .None) { (_, completedSteps, totalSteps) -> Void in
                     expect(completedSteps).to(beLessThanOrEqualTo(totalSteps))
-                }).error).to(beNil())
+                }
+                expect(repo.checkout(oid, options).error).to(beNil())
 
                 let HEAD = repo.HEAD().value
                 expect(HEAD?.longName).to(equal("HEAD"))
@@ -676,10 +508,10 @@ class RepositorySpec: FixturesSpec {
                 expect(repo.HEAD().value?.longName).to(equal("HEAD"))
 
                 let branch = repo.localBranch(named: "another-branch").value!
-                expect(repo.checkout(branch, strategy: CheckoutStrategy.None).error).to(beNil())
+                expect(repo.checkout(branch, CheckoutOptions(strategy: .None)).error).to(beNil())
                 expect(repo.HEAD().value?.shortName).to(equal(branch.name))
 
-                expect(repo.checkout(oid, strategy: CheckoutStrategy.None).error).to(beNil())
+                expect(repo.checkout(oid, CheckoutOptions(strategy: .None)).error).to(beNil())
                 expect(repo.HEAD().value?.longName).to(equal("HEAD"))
             }
         }
@@ -715,7 +547,7 @@ class RepositorySpec: FixturesSpec {
             it("Should add the modification under a path") {
                 let repo = Fixtures.simpleRepository
                 let branch = repo.localBranch(named: "master").value!
-                expect(repo.checkout(branch, strategy: CheckoutStrategy.None).error).to(beNil())
+                expect(repo.checkout(branch, CheckoutOptions(strategy: .None)).error).to(beNil())
 
                 // make a change to README
                 let readmeURL = repo.directoryURL!.appendingPathComponent("README.md")
@@ -738,7 +570,7 @@ class RepositorySpec: FixturesSpec {
             it("Should add an untracked file under a path") {
                 let repo = Fixtures.simpleRepository
                 let branch = repo.localBranch(named: "master").value!
-                expect(repo.checkout(branch, strategy: CheckoutStrategy.None).error).to(beNil())
+                expect(repo.checkout(branch, CheckoutOptions(strategy: .None)).error).to(beNil())
 
                 // make a change to README
                 let untrackedURL = repo.directoryURL!.appendingPathComponent("untracked")
@@ -757,7 +589,7 @@ class RepositorySpec: FixturesSpec {
             it("Should perform a simple commit with specified signature") {
                 let repo = Fixtures.simpleRepository
                 let branch = repo.localBranch(named: "master").value!
-                expect(repo.checkout(branch, strategy: CheckoutStrategy.None).error).to(beNil())
+                expect(repo.checkout(branch, CheckoutOptions(strategy: .None)).error).to(beNil())
 
                 // make a change to README
                 let untrackedURL = repo.directoryURL!.appendingPathComponent("untrackedtest")
@@ -792,7 +624,7 @@ class RepositorySpec: FixturesSpec {
 
                 let repo = Fixtures.mantleRepository
                 let branch = repo.localBranch(named: "master").value!
-                expect(repo.checkout(branch, strategy: CheckoutStrategy.None).error).to(beNil())
+                expect(repo.checkout(branch, CheckoutOptions(strategy: .None)).error).to(beNil())
 
                 let status = repo.status()
 
@@ -821,7 +653,9 @@ class RepositorySpec: FixturesSpec {
 
                 let repoWithStatus = Fixtures.sharedInstance.repository(named: "repository-with-status")
                 let branchWithStatus = repoWithStatus.localBranch(named: "master").value!
-                expect(repoWithStatus.checkout(branchWithStatus, strategy: CheckoutStrategy.None).error).to(beNil())
+                let result = repoWithStatus.checkout(branchWithStatus,
+                                                     CheckoutOptions(strategy: .None))
+                expect(result.error).to(beNil())
 
                 let statuses = repoWithStatus.status().value!
 
@@ -880,7 +714,7 @@ class RepositorySpec: FixturesSpec {
 
                 let repo = Fixtures.mantleRepository
                 let branch = repo.localBranch(named: "master").value!
-                expect(repo.checkout(branch, strategy: CheckoutStrategy.None).error).to(beNil())
+                expect(repo.checkout(branch, CheckoutOptions(strategy: .None)).error).to(beNil())
 
                 let head = repo.HEAD().value!
                 let commit = repo.object(head.oid).value! as! Commit
@@ -907,7 +741,7 @@ class RepositorySpec: FixturesSpec {
 
                 let repo = Fixtures.mantleRepository
                 expect(repo.checkout(OID(string: "047b931bd7f5478340cef5885a6fff713005f4d6")!,
-                                     strategy: CheckoutStrategy.None).error).to(beNil())
+                                     CheckoutOptions(strategy: .None)).error).to(beNil())
                 let head = repo.HEAD().value!
                 let initalCommit = repo.object(head.oid).value! as! Commit
                 let diff = repo.diff(for: initalCommit).value!
@@ -975,7 +809,7 @@ class RepositorySpec: FixturesSpec {
 
                 let repo = Fixtures.mantleRepository
                 expect(repo.checkout(OID(string: "d0d9c13da5eb5f9e8cf2a9f1f6ca3bdbe975b57d")!,
-                                     strategy: CheckoutStrategy.None).error).to(beNil())
+                                     CheckoutOptions(strategy: .None)).error).to(beNil())
                 let head = repo.HEAD().value!
                 let initalCommit = repo.object(head.oid).value! as! Commit
                 let diff = repo.diff(for: initalCommit).value!
@@ -994,11 +828,5 @@ class RepositorySpec: FixturesSpec {
                 expect(oldFilePaths).to(equal(expectedOldFilePaths))
             }
         }
-    }
-
-    func temporaryURL(forPurpose purpose: String) -> URL {
-        let globallyUniqueString = ProcessInfo.processInfo.globallyUniqueString
-        let path = "\(NSTemporaryDirectory())\(globallyUniqueString)_\(purpose)"
-        return URL(fileURLWithPath: path)
     }
 }

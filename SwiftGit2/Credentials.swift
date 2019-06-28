@@ -19,19 +19,48 @@ private class Wrapper<T> {
     }
 }
 
-public enum Credentials {
+public enum Credentials: Equatable {
     case `default`
-    case sshAgent
+    case username(String)
     case plaintext(username: String, password: String)
+    case sshAgent
     case sshFile(username: String, publicKeyPath: String, privateKeyPath: String, passphrase: String)
     case sshMemory(username: String, publicKey: String, privateKey: String, passphrase: String)
 
-    internal static func fromPointer(_ pointer: UnsafeMutableRawPointer) -> Credentials {
-        return Unmanaged<Wrapper<Credentials>>.fromOpaque(pointer).takeUnretainedValue().value
+    /// see `git_credtype_t`
+    internal var type: git_credtype_t {
+        switch self {
+        case .default:
+            return GIT_CREDTYPE_DEFAULT
+        case .username:
+            return GIT_CREDTYPE_USERNAME
+        case .plaintext:
+            return GIT_CREDTYPE_USERPASS_PLAINTEXT
+        case .sshAgent:
+            return git_credtype_t(rawValue: GIT_CREDTYPE_SSH_MEMORY.rawValue + GIT_CREDTYPE_SSH_KEY.rawValue)
+        case .sshFile:
+            return GIT_CREDTYPE_SSH_KEY
+        case .sshMemory:
+            return GIT_CREDTYPE_SSH_MEMORY
+        }
     }
 
-    internal func toPointer() -> UnsafeMutableRawPointer {
-        return Unmanaged.passRetained(Wrapper(self)).toOpaque()
+    internal func allowed(by code: UInt32) -> Bool {
+        return code & self.type.rawValue > 0
+    }
+
+    public static func == (lhs: Credentials, rhs: Credentials) -> Bool {
+        switch (lhs, rhs) {
+        case (.default, .default),
+             (.username, .username),
+             (.plaintext, .plaintext),
+             (.sshAgent, .sshAgent),
+             (.sshFile, .sshFile),
+             (.sshMemory, .sshMemory):
+            return true
+        default:
+            return false
+        }
     }
 }
 
@@ -42,7 +71,7 @@ internal func credentialsCallback(
     cred: UnsafeMutablePointer<UnsafeMutablePointer<git_cred>?>?,
     url: UnsafePointer<CChar>?,
     username: UnsafePointer<CChar>?,
-    _: UInt32,
+    allowTypes: UInt32,
     payload: UnsafeMutableRawPointer? ) -> Int32 {
 
     let result: Int32
@@ -50,20 +79,27 @@ internal func credentialsCallback(
     // Find username_from_url
     let name = username.map(String.init(cString:))
 
-    switch Credentials.fromPointer(payload!) {
+    var credentials = RemoteCallback.fromPointer(payload!).credentials
+    if (credentials == .default) && name == "git" {
+        // SSH protocol use sshAgent
+        credentials = .sshAgent
+    }
+
+    if !credentials.allowed(by: allowTypes) {
+        return -1
+    }
+
+    switch credentials {
     case .default:
-        if name == "git" {
-            // SSH protocol use sshAgent
-            result = git_cred_ssh_key_from_agent(cred, name!)
-        } else {
-            result = git_cred_default_new(cred)
-        }
-    case .sshAgent:
-        result = git_cred_ssh_key_from_agent(cred, name!)
+        result = git_cred_default_new(cred)
+    case .username(let username):
+        result = git_cred_username_new(cred, username)
     case .plaintext(let username, let password):
         result = git_cred_userpass_plaintext_new(cred, username, password)
-    case .sshFile(let username, let publicKeyPath, let privateKeyPath, let passphrase):
-        result = git_cred_ssh_key_new(cred, username, publicKeyPath, privateKeyPath, passphrase)
+    case .sshAgent:
+        result = git_cred_ssh_key_from_agent(cred, name!)
+    case .sshFile(let username, let publicKeyPath, let privateKeyPath, _):
+        result = git_cred_ssh_key_new(cred, username, publicKeyPath, privateKeyPath, "")
     case .sshMemory(let username, let publicKey, let privateKey, let passphrase):
         result = git_cred_ssh_key_memory_new(cred, username, publicKey, privateKey, passphrase)
     }

@@ -9,6 +9,13 @@
 import Quick
 
 class FixturesSpec: QuickSpec {
+
+    func temporaryURL(forPurpose purpose: String) -> URL {
+        let globallyUniqueString = ProcessInfo.processInfo.globallyUniqueString
+        let path = "\(NSTemporaryDirectory())\(globallyUniqueString)_\(purpose)"
+        return URL(fileURLWithPath: path)
+    }
+
     override func spec() {
         beforeSuite {
             Fixtures.sharedInstance.setUp()

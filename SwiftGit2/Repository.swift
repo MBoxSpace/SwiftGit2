@@ -9,52 +9,6 @@
 import Foundation
 import libgit2
 
-public typealias CheckoutProgressBlock = (String?, Int, Int) -> Void
-
-/// Helper function used as the libgit2 progress callback in git_checkout_options.
-/// This is a function with a type signature of git_checkout_progress_cb.
-func checkoutProgressCallback(path: UnsafePointer<Int8>?,
-                              completedSteps: Int,
-                              totalSteps: Int,
-                              payload: UnsafeMutableRawPointer?) {
-    if let payload = payload {
-        let buffer = payload.assumingMemoryBound(to: CheckoutProgressBlock.self)
-        let block: CheckoutProgressBlock
-        if completedSteps < totalSteps {
-            block = buffer.pointee
-        } else {
-            block = buffer.move()
-            buffer.deallocate()
-        }
-        block(path.flatMap(String.init(validatingUTF8:)), completedSteps, totalSteps)
-    }
-}
-
-/// Helper function for initializing libgit2 git_checkout_options.
-///
-/// :param: strategy The strategy to be used when checking out the repo, see CheckoutStrategy
-/// :param: progress A block that's called with the progress of the checkout.
-/// :returns: Returns a git_checkout_options struct with the progress members set.
-func checkoutOptions(strategy: CheckoutStrategy,
-                     progress: CheckoutProgressBlock? = nil) -> git_checkout_options {
-    // Do this because GIT_CHECKOUT_OPTIONS_INIT is unavailable in swift
-    let pointer = UnsafeMutablePointer<git_checkout_options>.allocate(capacity: 1)
-    git_checkout_init_options(pointer, UInt32(GIT_CHECKOUT_OPTIONS_VERSION))
-    var options = pointer.move()
-    pointer.deallocate()
-
-    options.checkout_strategy = strategy.gitCheckoutStrategy.rawValue
-
-    if progress != nil {
-        options.progress_cb = checkoutProgressCallback
-        let blockPointer = UnsafeMutablePointer<CheckoutProgressBlock>.allocate(capacity: 1)
-        blockPointer.initialize(to: progress!)
-        options.progress_payload = UnsafeMutableRawPointer(blockPointer)
-    }
-
-    return options
-}
-
 /// A git repository.
 public final class Repository {
 
@@ -411,10 +365,10 @@ public final class Repository {
     /// :param: strategy The checkout strategy to use.
     /// :param: progress A block that's called with the progress of the checkout.
     /// :returns: Returns a result with void or the error that occurred.
-    public func checkout(strategy: CheckoutStrategy, progress: CheckoutProgressBlock? = nil) -> Result<(), NSError> {
-        var options = checkoutOptions(strategy: strategy, progress: progress)
+    public func checkout(_ options: CheckoutOptions? = nil) -> Result<(), NSError> {
+        var opt = (options ?? CheckoutOptions()).toGit()
 
-        let result = git_checkout_head(self.pointer, &options)
+        let result = git_checkout_head(self.pointer, &opt)
         guard result == GIT_OK.rawValue else {
             return Result.failure(NSError(gitError: result, pointOfFailure: "git_checkout_head"))
         }
@@ -428,9 +382,8 @@ public final class Repository {
     /// :param: strategy The checkout strategy to use.
     /// :param: progress A block that's called with the progress of the checkout.
     /// :returns: Returns a result with void or the error that occurred.
-    public func checkout(_ oid: OID, strategy: CheckoutStrategy,
-                         progress: CheckoutProgressBlock? = nil) -> Result<(), NSError> {
-        return setHEAD(oid).flatMap { self.checkout(strategy: strategy, progress: progress) }
+    public func checkout(_ oid: OID, _ options: CheckoutOptions? = nil) -> Result<(), NSError> {
+        return setHEAD(oid).flatMap { self.checkout(options) }
     }
 
     /// Check out the given reference.
@@ -439,9 +392,8 @@ public final class Repository {
     /// :param: strategy The checkout strategy to use.
     /// :param: progress A block that's called with the progress of the checkout.
     /// :returns: Returns a result with void or the error that occurred.
-    public func checkout(_ reference: ReferenceType, strategy: CheckoutStrategy,
-                         progress: CheckoutProgressBlock? = nil) -> Result<(), NSError> {
-        return setHEAD(reference).flatMap { self.checkout(strategy: strategy, progress: progress) }
+    public func checkout(_ reference: ReferenceType, _ options: CheckoutOptions? = nil) -> Result<(), NSError> {
+        return setHEAD(reference).flatMap { self.checkout(options) }
     }
 
     /// Load all commits in the specified branch in topological & time order descending
