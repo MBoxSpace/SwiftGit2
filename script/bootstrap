@@ -10,7 +10,7 @@ config ()
 {
     # A whitespace-separated list of executables that must be present and locatable.
     # These will each be installed through Homebrew if not found.
-    : ${REQUIRED_TOOLS="cmake libssh2 libtool autoconf automake pkg-config"}
+    : ${REQUIRED_TOOLS="cmake libtool autoconf automake pkg-config"}
 
     export REQUIRED_TOOLS
 }
@@ -56,8 +56,6 @@ check_deps ()
         echo "Homebrew is not installed (http://brew.sh). You will need to manually ensure the following tools are installed:"
         echo "  $REQUIRED_TOOLS"
         echo
-        echo "Additionally, the following libssh2 files must be symlinked under /usr/local:"
-        echo "  lib/libssh2.a include/libssh2.h include/libssh2_sftp.h include/libssh2_publickey.h"
         exit $result
     fi
 
@@ -80,28 +78,6 @@ check_deps ()
         echo "*** Installing $tool with Homebrew..."
         brew install "$tool"
     done
-
-    brew_prefix=`brew --prefix`
-    expected_prefix=/usr/local
-
-    if [ "$brew_prefix" != "$expected_prefix" ]
-    then
-        echo "*** Adding soft links into $expected_prefix..."
-
-        products=(lib/libssh2.a include/libssh2.h include/libssh2_sftp.h include/libssh2_publickey.h)
-
-        for product in "${products[@]}"
-        do
-            destination="$expected_prefix/$product"
-            if [ -e "$destination" ]
-            then
-                continue
-            fi
-
-            sudo mkdir -p "$(dirname "$destination")"
-            sudo ln -s "$brew_prefix/$product" "$destination"
-        done
-    fi
 }
 
 bootstrap_submodule ()
