@@ -293,6 +293,14 @@ class RepositorySpec: FixturesSpec {
                 expect(result.value as? Branch).notTo(beNil())
             }
 
+            it("should return a local branch if it is a short branch name") {
+                let name = "master"
+                let result = Fixtures.simpleRepository.reference(named: name)
+                expect(result.map { $0.shortName }.value) == "master"
+                expect(result.map { $0.longName }.value) == "refs/heads/master"
+                expect(result.value as? Branch).notTo(beNil())
+            }
+
             it("should return a remote branch if it exists") {
                 let name = "refs/remotes/upstream/master"
                 let result = Fixtures.mantleRepository.reference(named: name)
@@ -304,6 +312,14 @@ class RepositorySpec: FixturesSpec {
                 let name = "refs/tags/tag-2"
                 let result = Fixtures.simpleRepository.reference(named: name)
                 expect(result.value?.longName).to(equal(name))
+                expect(result.value as? TagReference).notTo(beNil())
+            }
+
+            it("should return a tag if it is a short tag name") {
+                let name = "tag-2"
+                let result = Fixtures.simpleRepository.reference(named: name)
+                expect(result.value?.shortName).to(equal(name))
+                expect(result.value?.longName) == "refs/tags/tag-2"
                 expect(result.value as? TagReference).notTo(beNil())
             }
 
@@ -445,7 +461,7 @@ class RepositorySpec: FixturesSpec {
                 expect(HEAD?.longName).to(equal("HEAD"))
                 expect(HEAD?.oid).to(equal(oid))
 
-                expect(repo.setHEAD(repo.localBranch(named: "master").value!).error).to(beNil())
+                expect(repo.setHEAD(repo.localBranch(named: "master").value!.longName).error).to(beNil())
                 expect(repo.HEAD().value?.shortName).to(equal("master"))
             }
         }
@@ -457,7 +473,7 @@ class RepositorySpec: FixturesSpec {
                 expect(repo.HEAD().value?.longName).to(equal("HEAD"))
 
                 let branch = repo.localBranch(named: "another-branch").value!
-                expect(repo.setHEAD(branch).error).to(beNil())
+                expect(repo.setHEAD(branch.longName).error).to(beNil())
                 expect(repo.HEAD().value?.shortName).to(equal(branch.name))
 
                 expect(repo.setHEAD(oid).error).to(beNil())
@@ -480,7 +496,7 @@ class RepositorySpec: FixturesSpec {
                 expect(HEAD?.longName).to(equal("HEAD"))
                 expect(HEAD?.oid).to(equal(oid))
 
-                expect(repo.checkout(repo.localBranch(named: "master").value!,
+                expect(repo.checkout(repo.localBranch(named: "master").value!.longName,
                                      CheckoutOptions(strategy: .None)).error).to(beNil())
                 expect(repo.HEAD().value?.shortName).to(equal("master"))
             }
@@ -508,7 +524,7 @@ class RepositorySpec: FixturesSpec {
                 expect(repo.HEAD().value?.longName).to(equal("HEAD"))
 
                 let branch = repo.localBranch(named: "another-branch").value!
-                expect(repo.checkout(branch, CheckoutOptions(strategy: .None)).error).to(beNil())
+                expect(repo.checkout(branch.longName, CheckoutOptions(strategy: .None)).error).to(beNil())
                 expect(repo.HEAD().value?.shortName).to(equal(branch.name))
 
                 expect(repo.checkout(oid, CheckoutOptions(strategy: .None)).error).to(beNil())
@@ -547,7 +563,7 @@ class RepositorySpec: FixturesSpec {
             it("Should add the modification under a path") {
                 let repo = Fixtures.simpleRepository
                 let branch = repo.localBranch(named: "master").value!
-                expect(repo.checkout(branch, CheckoutOptions(strategy: .None)).error).to(beNil())
+                expect(repo.checkout(branch.longName, CheckoutOptions(strategy: .None)).error).to(beNil())
 
                 // make a change to README
                 let readmeURL = repo.directoryURL!.appendingPathComponent("README.md")
@@ -570,7 +586,7 @@ class RepositorySpec: FixturesSpec {
             it("Should add an untracked file under a path") {
                 let repo = Fixtures.simpleRepository
                 let branch = repo.localBranch(named: "master").value!
-                expect(repo.checkout(branch, CheckoutOptions(strategy: .None)).error).to(beNil())
+                expect(repo.checkout(branch.longName, CheckoutOptions(strategy: .None)).error).to(beNil())
 
                 // make a change to README
                 let untrackedURL = repo.directoryURL!.appendingPathComponent("untracked")
@@ -589,7 +605,7 @@ class RepositorySpec: FixturesSpec {
             it("Should perform a simple commit with specified signature") {
                 let repo = Fixtures.simpleRepository
                 let branch = repo.localBranch(named: "master").value!
-                expect(repo.checkout(branch, CheckoutOptions(strategy: .None)).error).to(beNil())
+                expect(repo.checkout(branch.longName, CheckoutOptions(strategy: .None)).error).to(beNil())
 
                 // make a change to README
                 let untrackedURL = repo.directoryURL!.appendingPathComponent("untrackedtest")
@@ -624,7 +640,7 @@ class RepositorySpec: FixturesSpec {
 
                 let repo = Fixtures.mantleRepository
                 let branch = repo.localBranch(named: "master").value!
-                expect(repo.checkout(branch, CheckoutOptions(strategy: .None)).error).to(beNil())
+                expect(repo.checkout(branch.longName, CheckoutOptions(strategy: .None)).error).to(beNil())
 
                 let status = repo.status()
 
@@ -653,7 +669,7 @@ class RepositorySpec: FixturesSpec {
 
                 let repoWithStatus = Fixtures.sharedInstance.repository(named: "repository-with-status")
                 let branchWithStatus = repoWithStatus.localBranch(named: "master").value!
-                let result = repoWithStatus.checkout(branchWithStatus,
+                let result = repoWithStatus.checkout(branchWithStatus.longName,
                                                      CheckoutOptions(strategy: .None))
                 expect(result.error).to(beNil())
 
@@ -714,7 +730,7 @@ class RepositorySpec: FixturesSpec {
 
                 let repo = Fixtures.mantleRepository
                 let branch = repo.localBranch(named: "master").value!
-                expect(repo.checkout(branch, CheckoutOptions(strategy: .None)).error).to(beNil())
+                expect(repo.checkout(branch.longName, CheckoutOptions(strategy: .None)).error).to(beNil())
 
                 let head = repo.HEAD().value!
                 let commit = repo.object(head.oid).value! as! Commit

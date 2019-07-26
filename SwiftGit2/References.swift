@@ -9,13 +9,38 @@
 import libgit2
 
 /// A reference to a git object.
-public protocol ReferenceType {
+public protocol BaseReferenceType {
     /// The full name of the reference (e.g., `refs/heads/master`).
     var longName: String { get }
 
     /// The short human-readable name of the reference if one exists (e.g., `master`).
     var shortName: String? { get }
+}
 
+public struct UnbornBranch: BaseReferenceType {
+
+    /// The full name of the reference (e.g., `refs/heads/master`).
+    public var longName: String
+
+    /// The short human-readable name of the reference if one exists (e.g., `master`).
+    public var shortName: String? {
+        return name
+    }
+
+    public var name: String
+
+    /// Create an instance with a libgit2 `git_reference` object.
+    ///
+    /// Returns `nil` if the pointer isn't a branch.
+    public init?(_ pointer: OpaquePointer, unborn: Bool = false) {
+        longName = String(validatingUTF8: git_reference_symbolic_target(pointer))!
+        name = longName.split(separator: "/")[2...].joined(separator: "/")
+    }
+
+}
+
+/// A reference to a git object.
+public protocol ReferenceType: BaseReferenceType {
     /// The OID of the referenced object.
     var oid: OID { get }
 }
@@ -80,7 +105,14 @@ public struct Branch: ReferenceType, Hashable {
     ///
     /// This is the same as `name`, but is declared with an Optional type to adhere to
     /// `ReferenceType`.
-    public var shortName: String? { return name }
+    public var shortName: String? {
+        if isRemote,
+            let index = name.range(of: "/")?.upperBound {
+            let shortname = name[index...]
+            return String(shortname)
+        }
+        return name
+    }
 
     /// The OID of the referenced object.
     ///
@@ -92,6 +124,9 @@ public struct Branch: ReferenceType, Hashable {
 
     /// Whether the branch is a remote branch.
     public var isRemote: Bool { return longName.hasPrefix("refs/remotes/") }
+
+    /// Whether the branch is a unborn branch. If it is unborn, the oid will be invalid.
+    public var isUnborn: Bool = false
 
     /// The remote repository name if this is a remote branch.
     public var remoteName: String? {
@@ -106,14 +141,14 @@ public struct Branch: ReferenceType, Hashable {
     ///
     /// Returns `nil` if the pointer isn't a branch.
     public init?(_ pointer: OpaquePointer) {
+        longName = String(validatingUTF8: git_reference_name(pointer))!
+
         var namePointer: UnsafePointer<Int8>? = nil
         let success = git_branch_name(&namePointer, pointer)
         guard success == GIT_OK.rawValue else {
             return nil
         }
         name = String(validatingUTF8: namePointer!)!
-
-        longName = String(validatingUTF8: git_reference_name(pointer))!
 
         var oid: OID
         if git_reference_type(pointer).rawValue == GIT_REFERENCE_SYMBOLIC.rawValue {

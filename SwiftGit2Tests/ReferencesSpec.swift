@@ -83,7 +83,7 @@ class BranchSpec: QuickSpec {
                 let branch = repo.withGitReference(named: "refs/remotes/origin/HEAD") { Branch($0)! }
                 expect(branch.longName).to(equal("refs/remotes/origin/HEAD"))
                 expect(branch.name).to(equal("origin/HEAD"))
-                expect(branch.shortName).to(equal(branch.name))
+                expect(branch.shortName).to(equal("HEAD"))
                 expect(branch.commit.oid).to(equal(OID(string: "f797bd4837b61d37847a4833024aab268599a681")!))
                 expect(branch.oid).to(equal(branch.commit.oid))
                 expect(branch.isLocal).to(beFalse())

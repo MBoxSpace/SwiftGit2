@@ -80,6 +80,46 @@ extension Repository {
         }
     }
 
+    public func pull(remote: String? = nil,
+                     branch: String? = nil,
+                     options: FetchOptions? = nil) -> Result<(), NSError> {
+        return self.fetch(remote, options: options).flatMap {_ in
+            do {
+                var remoteBranch: Branch
+                if let remote = remote, let branch = branch {
+                    remoteBranch = try self.remoteBranch(named: "\(remote)/\(branch)").get()
+                } else {
+                    remoteBranch = try self.trackBranch().get()
+                    if let remote = remote {
+                        remoteBranch = try self.remoteBranch(named: "\(remote)/\(remoteBranch.shortName!)").get()
+                    } else if let branch = branch {
+                        remoteBranch = try self.remoteBranch(named: "\(remoteBranch.remoteName!)/\(branch)").get()
+                    }
+                }
+                return self.merge(from: remoteBranch.oid, message: "Merge \(remoteBranch)").flatMap { _ in .success(()) }
+            } catch {
+                return .failure(error as NSError)
+            }
+        }
+    }
+
+    public func push(_ remote: String? = nil,
+                     options: PushOptions? = nil) -> Result<(), NSError> {
+        var remoteServer: OpaquePointer? = nil
+        var result = git_remote_lookup(&remoteServer, self.pointer, remote)
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result, pointOfFailure: "git_remote_lookup"))
+        }
+
+        var opts = (options ?? PushOptions()).toGit()
+        result = git_remote_push(remoteServer, nil, &opts)
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result, pointOfFailure: "git_remote_push"))
+        }
+
+        return .success(())
+    }
+
     /// Clone the repository from a given URL.
     ///
     /// remoteURL   - The URL of the remote repository
@@ -106,14 +146,14 @@ extension Repository {
         return Result.success(repository)
     }
 
-    public class func lsRemote(at url: URL, credentials: Credentials = .default) -> Result<[String], NSError> {
+    public class func lsRemote(at url: URL, callback: RemoteCallback? = nil) -> Result<[String], NSError> {
         var remote: OpaquePointer? = nil
 
         var result = git_remote_create_detached(&remote, url.path)
         guard result == GIT_OK.rawValue else {
             return .failure(NSError(gitError: result, pointOfFailure: "git_remote_create_detached"))
         }
-        var callback = RemoteCallback().toGit()
+        var callback = (callback ?? RemoteCallback()).toGit()
 
         result = git_remote_connect(remote, GIT_DIRECTION_FETCH, &callback, nil, nil)
         guard result == GIT_OK.rawValue else {
@@ -134,19 +174,19 @@ extension Repository {
         return .success(names)
     }
 
-    public class func remoteBranches(at url: URL, credentials: Credentials = .default) -> Result<[String], NSError> {
+    public class func remoteBranches(at url: URL, callback: RemoteCallback? = nil) -> Result<[String], NSError> {
         let prefix = "refs/heads/"
-        return lsRemote(at: url).flatMap {
+        return lsRemote(at: url, callback: callback).flatMap {
             .success($0.compactMap {
                 $0.starts(with: prefix) ? String($0.dropFirst(prefix.count)) : nil
             })
         }
     }
 
-    public class func remoteTags(at url: URL, credentials: Credentials = .default) -> Result<[String], NSError> {
+    public class func remoteTags(at url: URL, callback: RemoteCallback? = nil) -> Result<[String], NSError> {
         let prefix = "refs/tags/"
         let subffix = "^{}"
-        return lsRemote(at: url).flatMap {
+        return lsRemote(at: url, callback: callback).flatMap {
             .success($0.compactMap {
                 if $0.hasPrefix(prefix) && !$0.hasSuffix(subffix) {
                     return String($0.dropFirst(prefix.count))

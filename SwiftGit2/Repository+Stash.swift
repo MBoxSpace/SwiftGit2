@@ -9,7 +9,18 @@
 import Foundation
 import libgit2
 
-public typealias StashEachBlock = (Int, String, OID) -> Bool
+public struct Stash {
+    public var id: Int
+    public var message: String
+    public var oid: OID
+    init(id: Int, message: String, oid: OID) {
+        self.id = id
+        self.message = message
+        self.oid = oid
+    }
+}
+
+public typealias StashEachBlock = (Stash) -> Bool
 
 /// Helper function used as the libgit2 progress callback in git_stash_foreach.
 /// This is a function with a type signature of git_stash_cb.
@@ -20,13 +31,14 @@ private func stashForEachCallback(index: Int,
                                   payload: UnsafeMutableRawPointer?) -> Int32 {
     guard let payload = payload,
         let msg = message.flatMap(String.init(validatingUTF8:)),
-        let oid = stash_id.flatMap({ $0.pointee }) else {
+        let oid = stash_id.flatMap({ OID($0.pointee) }) else {
         return 1
     }
+    let stash = Stash(id: index, message: msg, oid: oid)
 
     let buffer = payload.assumingMemoryBound(to: StashEachBlock.self)
     let block = buffer.pointee
-    if !block(index, msg, OID(oid)) {
+    if !block(stash) {
         return 1
     }
     return 0
@@ -34,32 +46,48 @@ private func stashForEachCallback(index: Int,
 
 public extension Repository {
 
-    func forEachStash(block: @escaping StashEachBlock) {
+    @discardableResult
+    func forEachStash(block: @escaping StashEachBlock) -> Result<(), NSError> {
         let blockPointer = UnsafeMutablePointer<StashEachBlock>.allocate(capacity: 1)
         blockPointer.initialize(repeating: block, count: 1)
-        git_stash_foreach(self.pointer, stashForEachCallback, UnsafeMutableRawPointer(blockPointer))
-        blockPointer.deallocate()
+        defer { blockPointer.deallocate() }
+        let result = git_stash_foreach(self.pointer, stashForEachCallback, UnsafeMutableRawPointer(blockPointer))
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result, pointOfFailure: "git_stash_foreach"))
+        }
+        return .success(())
     }
 
-    func save(stash: String, keepIndex: Bool = false, includeUntrack: Bool = false, includeIgnore: Bool = false) -> Result<OID, NSError> {
+    func stashes() -> Result<[Stash], NSError> {
+        var stashes = [Stash]()
+        return self.forEachStash {
+            stashes.append($0)
+            return true
+        }
+        .flatMap {
+            .success(stashes)
+        }
+    }
+
+    func save(stash: String, keepIndex: Bool = false, includeUntracked: Bool = false, includeIgnored: Bool = false) -> Result<Stash, NSError> {
         var flags: UInt32 = GIT_STASH_DEFAULT.rawValue
         if keepIndex {
             flags += GIT_STASH_KEEP_INDEX.rawValue
         }
-        if includeUntrack {
+        if includeUntracked {
             flags += GIT_STASH_INCLUDE_UNTRACKED.rawValue
         }
-        if includeIgnore {
+        if includeIgnored {
             flags += GIT_STASH_INCLUDE_IGNORED.rawValue
         }
-        return Signature.default(self).flatMap { signature -> Result<OID, NSError> in
-            signature.makeUnsafeSignature().flatMap { signature -> Result<OID, NSError> in
+        return Signature.default(self).flatMap { signature -> Result<Stash, NSError> in
+            signature.makeUnsafeSignature().flatMap { signature -> Result<Stash, NSError> in
                 var gitOID = git_oid()
                 let result = git_stash_save(&gitOID, self.pointer, signature, stash, flags)
                 if result != GIT_OK.rawValue {
                     return .failure(NSError(gitError: result, pointOfFailure: "git_stash_save"))
                 }
-                return .success(OID(gitOID))
+                return .success(Stash(id: 0, message: stash, oid: OID(gitOID)))
             }
         }
     }

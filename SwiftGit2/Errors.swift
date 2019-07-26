@@ -10,11 +10,13 @@ internal extension NSError {
     /// :param: libGit2PointOfFailure The name of the libgit2 function that produced the
     ///         error code.
     /// :returns: An NSError with a libgit2 error domain, code, and message.
-    convenience init(gitError errorCode: Int32, pointOfFailure: String? = nil) {
+    convenience init(gitError errorCode: Int32, pointOfFailure: String? = nil, description: String? = nil) {
         let code = Int(errorCode)
         var userInfo: [String: String] = [:]
 
-        if let message = errorMessage(errorCode) {
+        if let description = description {
+            userInfo[NSLocalizedDescriptionKey] = description
+        } else if let message = errorMessage(errorCode) {
             userInfo[NSLocalizedDescriptionKey] = message
         } else {
             userInfo[NSLocalizedDescriptionKey] = "Unknown libgit2 error."
@@ -39,7 +41,7 @@ internal extension NSError {
 ///           corresponding string representation of that error. Otherwise, it returns
 ///           nil.
 private func errorMessage(_ errorCode: Int32) -> String? {
-    let last = giterr_last()
+    let last = git_error_last()
     if let lastErrorPointer = last {
         return String(validatingUTF8: lastErrorPointer.pointee.message)
     } else if errorCode == GIT_ERROR_OS.rawValue {

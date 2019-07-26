@@ -9,9 +9,36 @@
 import Foundation
 import libgit2
 
-extension Repository {
+public extension Repository {
+    /// Load and return a list of all local branches.
+    func localBranches() -> Result<[Branch], NSError> {
+        return references(withPrefix: "refs/heads/").map { (refs: [ReferenceType]) in
+            return refs.map { $0 as! Branch }
+        }
+    }
+
+    /// Load and return a list of all remote branches.
+    func remoteBranches() -> Result<[Branch], NSError> {
+        return references(withPrefix: "refs/remotes/").map { (refs: [ReferenceType]) in
+            return refs.map { $0 as! Branch }
+        }
+    }
+
+    /// Load the local branch with the given name (e.g., "master").
+    func localBranch(named name: String) -> Result<Branch, NSError> {
+        return reference(named: "refs/heads/" + name).map { $0 as! Branch }
+    }
+
+    /// Load the remote branch with the given name (e.g., "origin/master").
+    func remoteBranch(named name: String) -> Result<Branch, NSError> {
+        return reference(named: "refs/remotes/" + name).map { $0 as! Branch }
+    }
+
     /// Load the local/remote branch with the given name (e.g., "master").
-    public func branch(named name: String) -> Result<Branch, NSError> {
+    func branch(named name: String) -> Result<Branch, NSError> {
+        if name.hasPrefix("refs/") {
+            return reference(named: name).map { $0 as! Branch }
+        }
         let result = localBranch(named: name)
         if result.isSuccess {
             return result
@@ -41,9 +68,9 @@ extension Repository {
     }
 
     @discardableResult
-    public func createBranch(_ name: String, force: Bool = false) -> Result<Branch, NSError> {
-        if !checkValid(name) {
-            return .failure(NSError(gitError: -1, pointOfFailure: "Branch name `\(name)` is invalid."))
+    func createBranch(_ name: String, force: Bool = false) -> Result<Branch, NSError> {
+        if !checkValid("refs/heads/\(name)") {
+            return .failure(NSError(gitError: -1, description: "Branch name `\(name)` is invalid."))
         }
         return HEAD().flatMap { reference -> Result<Branch, NSError> in
             createBranch(name, oid: reference.oid, force: force)
@@ -51,9 +78,9 @@ extension Repository {
     }
 
     @discardableResult
-    public func createBranch(_ name: String, baseBranch: String, baseLocal: Bool = true, force: Bool = false) -> Result<Branch, NSError> {
-        if !checkValid(name) {
-            return .failure(NSError(gitError: -1, pointOfFailure: "Branch name `\(name)` is invalid."))
+    func createBranch(_ name: String, baseBranch: String, baseLocal: Bool = true, force: Bool = false) -> Result<Branch, NSError> {
+        if !checkValid("refs/heads/\(name)") {
+            return .failure(NSError(gitError: -1, description: "Branch name `\(name)` is invalid."))
         }
         let result = baseLocal ? localBranch(named: baseBranch) : remoteBranch(named: baseBranch)
         return result.flatMap { branch -> Result<Branch, NSError> in
@@ -62,9 +89,9 @@ extension Repository {
     }
 
     @discardableResult
-    public func createBranch(_ name: String, baseTag: String, force: Bool = false) -> Result<Branch, NSError> {
-        if !checkValid(name) {
-            return .failure(NSError(gitError: -1, pointOfFailure: "Branch name `\(name)` is invalid."))
+    func createBranch(_ name: String, baseTag: String, force: Bool = false) -> Result<Branch, NSError> {
+        if !checkValid("refs/heads/\(name)") {
+            return .failure(NSError(gitError: -1, description: "Branch name `\(name)` is invalid."))
         }
         return tag(named: baseTag).flatMap { tag -> Result<Branch, NSError> in
             createBranch(name, oid: tag.oid, force: force)
@@ -72,16 +99,16 @@ extension Repository {
     }
 
     @discardableResult
-    public func createBranch(_ name: String, baseCommit: String, force: Bool = false) -> Result<Branch, NSError> {
-        if !checkValid(name) {
-            return .failure(NSError(gitError: -1, pointOfFailure: "Branch name `\(name)` is invalid."))
+    func createBranch(_ name: String, baseCommit: String, force: Bool = false) -> Result<Branch, NSError> {
+        if !checkValid("refs/heads/\(name)") {
+            return .failure(NSError(gitError: -1, description: "Branch name `\(name)` is invalid."))
         }
         return reference(named: baseCommit).flatMap { commit -> Result<Branch, NSError> in
             createBranch(name, oid: commit.oid, force: force)
         }
     }
 
-    public func deleteBranch(_ name: String) -> Result<(), NSError> {
+    func deleteBranch(_ name: String) -> Result<(), NSError> {
         let name = name.hasPrefix("refs/heads/") ? name : "refs/heads/\(name)"
         var pointer: OpaquePointer? = nil
         var result = git_reference_lookup(&pointer, self.pointer, name)
@@ -99,7 +126,7 @@ extension Repository {
         return .success(())
     }
 
-    public func setTrackBranch(local: String, remote: String? = nil) -> Result<(), NSError> {
+    func setTrackBranch(local: String, remote: String? = nil) -> Result<(), NSError> {
         var pointer: OpaquePointer? = nil
         var result = git_branch_lookup(&pointer, self.pointer, local, GIT_BRANCH_LOCAL)
         defer { git_reference_free(pointer) }
@@ -116,7 +143,7 @@ extension Repository {
         return .success(())
     }
 
-    public func trackBranch() -> Result<Branch, NSError> {
+    func trackBranch() -> Result<Branch, NSError> {
         return HEAD().flatMap({ ref -> Result<Branch, NSError> in
             guard let branch = ref as? Branch else {
                 return .failure(NSError(gitError: -1, pointOfFailure: "git_branch_lookup"))
@@ -125,7 +152,7 @@ extension Repository {
         })
     }
 
-    public func trackBranch(local: String) -> Result<Branch, NSError> {
+    func trackBranch(local: String) -> Result<Branch, NSError> {
         var pointer: OpaquePointer? = nil
         var result = git_branch_lookup(&pointer, self.pointer, local, GIT_BRANCH_LOCAL)
         defer { git_reference_free(pointer) }

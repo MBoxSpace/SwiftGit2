@@ -68,7 +68,7 @@ class RepositoryRemoteSpec: FixturesSpec {
             }
         }
 
-        describe("Repository.Type.clone(from:to:)") {
+        describe("Repository.Type.lsRemote(at:)") {
             it("should list all reference from remote repo") {
                 let result = Repository.lsRemote(at: URL(string: "git@github.com:CocoaPods/Xcodeproj.git")!)
                 expect(result.error).to(beNil())
@@ -95,6 +95,46 @@ class RepositoryRemoteSpec: FixturesSpec {
                     expect(names.contains("1-0-stable")).to(beFalse())
                     expect(names.contains("1.0.0")).to(beTrue())
                 }
+            }
+        }
+
+        describe("Repository.pull(remote:options:)") {
+            beforeEach {
+                Fixtures.sharedInstance.tearDown()
+                Fixtures.sharedInstance.setUp()
+            }
+            afterEach {
+                Fixtures.sharedInstance.tearDown()
+                Fixtures.sharedInstance.setUp()
+            }
+            it("should pull from default remote") {
+                let repo = Fixtures.mantleRepository
+                let pullResult = repo.pull()
+                expect(pullResult.error).to(beNil())
+
+                let currentHEAD = repo.HEAD()
+                let remoteHEAD = repo.remoteBranch(named: "origin/master")
+                expect(currentHEAD.value?.oid).to(equal(remoteHEAD.value?.oid))
+            }
+
+            it("should pull from custom remote") {
+                let repo = Fixtures.mantleRepository
+                let pullResult = repo.pull(remote: "upstream")
+                expect(pullResult.error).to(beNil())
+
+                let currentHEAD = repo.HEAD()
+                let remoteHEAD = repo.remoteBranch(named: "upstream/master")
+                expect(currentHEAD.value?.oid).to(equal(remoteHEAD.value?.oid))
+            }
+
+            it("should pull from custom remote and custom branch") {
+                let repo = Fixtures.mantleRepository
+                let pullResult = repo.pull(remote: "upstream", branch: "master")
+                expect(pullResult.error).to(beNil())
+
+                let currentHEAD = repo.HEAD()
+                let remoteHEAD = repo.remoteBranch(named: "upstream/master")
+                expect(currentHEAD.value?.oid).to(equal(remoteHEAD.value?.oid))
             }
         }
 
