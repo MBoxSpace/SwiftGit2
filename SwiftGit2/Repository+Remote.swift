@@ -36,8 +36,6 @@ extension Repository {
 
     private func remoteLookup<A>(named name: String, _ callback: (Result<OpaquePointer, NSError>) -> A) -> A {
         var pointer: OpaquePointer? = nil
-        defer { git_remote_free(pointer) }
-
         let result = git_remote_lookup(&pointer, self.pointer, name)
 
         guard result == GIT_OK.rawValue else {
@@ -96,7 +94,7 @@ extension Repository {
                         remoteBranch = try self.remoteBranch(named: "\(remoteBranch.remoteName!)/\(branch)").get()
                     }
                 }
-                return self.merge(from: remoteBranch.oid, message: "Merge \(remoteBranch)").flatMap { _ in .success(()) }
+                return self.merge(with: remoteBranch.oid, message: "Merge \(remoteBranch)").flatMap { _ in .success(()) }
             } catch {
                 return .failure(error as NSError)
             }
@@ -104,20 +102,34 @@ extension Repository {
     }
 
     public func push(_ remote: String? = nil,
+                     branch: String? = nil,
                      options: PushOptions? = nil) -> Result<(), NSError> {
-        var remoteServer: OpaquePointer? = nil
-        var result = git_remote_lookup(&remoteServer, self.pointer, remote)
-        guard result == GIT_OK.rawValue else {
-            return .failure(NSError(gitError: result, pointOfFailure: "git_remote_lookup"))
-        }
+        do {
+            let remote = try remote ?? self.allRemotes().get().first!.name
+            var remoteServer: OpaquePointer? = nil
+            var result = git_remote_lookup(&remoteServer, self.pointer, remote)
+            guard result == GIT_OK.rawValue else {
+                return .failure(NSError(gitError: result, pointOfFailure: "git_remote_lookup"))
+            }
 
-        var opts = (options ?? PushOptions()).toGit()
-        result = git_remote_push(remoteServer, nil, &opts)
-        guard result == GIT_OK.rawValue else {
-            return .failure(NSError(gitError: result, pointOfFailure: "git_remote_push"))
-        }
+            var opts = (options ?? PushOptions()).toGit()
+            var branches: git_strarray
+            if let branch = branch {
+                let ref = try self.reference(named: branch).get().longName
+                var pointer = UnsafeMutablePointer<Int8>(mutating: (ref as NSString).utf8String)
+                branches = git_strarray(strings: &pointer, count: 1)
+            } else {
+                branches = git_strarray()
+            }
+            result = git_remote_push(remoteServer, &branches, &opts)
+            guard result == GIT_OK.rawValue else {
+                return .failure(NSError(gitError: result, pointOfFailure: "git_remote_push"))
+            }
 
-        return .success(())
+            return .success(())
+        } catch {
+            return .failure(error as NSError)
+        }
     }
 
     /// Clone the repository from a given URL.
@@ -149,7 +161,8 @@ extension Repository {
     public class func lsRemote(at url: URL, callback: RemoteCallback? = nil) -> Result<[String], NSError> {
         var remote: OpaquePointer? = nil
 
-        var result = git_remote_create_detached(&remote, url.path)
+        let remoteURLString = (url as NSURL).isFileReferenceURL() ? url.path : url.absoluteString
+        var result = git_remote_create_detached(&remote, remoteURLString)
         guard result == GIT_OK.rawValue else {
             return .failure(NSError(gitError: result, pointOfFailure: "git_remote_create_detached"))
         }

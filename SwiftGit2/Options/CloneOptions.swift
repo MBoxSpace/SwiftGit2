@@ -24,6 +24,7 @@ public class CloneOptions {
         self.bare = bare
         self.localClone = localClone
         self.fetchOptions = fetchOptions ?? FetchOptions()
+        self.fetchOptions.remoteCallback.mode = .Clone
         self.checkoutBranch = checkoutBranch
         self.checkoutOptions = checkoutOptions ?? CheckoutOptions()
     }

@@ -18,7 +18,8 @@ public class PushOptions: NSObject {
     public init(credentials: Credentials = .default,
                 messageBlock: MessageBlock? = nil,
                 progressBlock: ProgressBlock? = nil) {
-        self.remoteCallback = RemoteCallback(credentials: credentials,
+        self.remoteCallback = RemoteCallback(mode: .Push,
+                                             credentials: credentials,
                                              messageBlock: messageBlock,
                                              progressBlock: progressBlock)
     }

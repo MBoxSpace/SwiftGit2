@@ -84,7 +84,53 @@ public extension Repository {
         }
     }
 
-    func merge(from oid: OID, message: String) -> Result<GitMergeAnalysisStatus, NSError> {
+    private func merge<T>(with oid: OID, block: (OpaquePointer) -> Result<T, NSError>) -> Result<T, NSError> {
+        var result: Int32
+        var git_oid = oid.oid
+
+        // Do a merge
+        var mergeOptions = git_merge_options()
+        result = git_merge_init_options(&mergeOptions, UInt32(GIT_MERGE_OPTIONS_VERSION))
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result,
+                                    pointOfFailure: "git_merge_init_options"))
+        }
+
+        var checkoutOptions = git_checkout_options()
+        result = git_checkout_init_options(&checkoutOptions, UInt32(GIT_CHECKOUT_OPTIONS_VERSION))
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result,
+                                    pointOfFailure: "git_checkout_init_options"))
+        }
+
+        checkoutOptions.checkout_strategy = GIT_CHECKOUT_SAFE.rawValue | GIT_CHECKOUT_ALLOW_CONFLICTS.rawValue
+
+        var annotatedCommit: OpaquePointer?
+        git_oid = oid.oid
+        defer { git_annotated_commit_free(annotatedCommit) }
+        result = git_annotated_commit_lookup(&annotatedCommit, self.pointer, &git_oid)
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result,
+                                    pointOfFailure: "git_annotated_commit_lookup"))
+        }
+
+        result = git_merge(self.pointer, &annotatedCommit, 1, &mergeOptions, &checkoutOptions)
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result,
+                                    pointOfFailure: "git_merge"))
+        }
+
+        var index: OpaquePointer?
+        defer { git_index_free(index) }
+        result = git_repository_index(&index, self.pointer)
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result,
+                                    pointOfFailure: "git_repository_index"))
+        }
+        return block(index!)
+    }
+
+    func merge(with oid: OID, message: String) -> Result<GitMergeAnalysisStatus, NSError> {
         guard let targetBranch = try? self.HEAD().get() as? Branch else {
             return .failure(NSError(gitError: GIT_ERROR.rawValue, pointOfFailure: "Current Head is not a branch."))
         }
@@ -106,11 +152,10 @@ public extension Repository {
                     }
                 })
             } else {
-                // Do normal merge
                 var result: Int32
+                var git_oid = oid.oid
 
                 var sourceCommit: OpaquePointer? = nil
-                var git_oid = oid.oid
                 defer { git_commit_free(sourceCommit) }
                 result = git_commit_lookup(&sourceCommit, self.pointer, &git_oid)
                 guard result == GIT_OK.rawValue else {
@@ -140,62 +185,24 @@ public extension Repository {
                                             pointOfFailure: "git_commit_tree"))
                 }
 
-                // Do a merge
-                var mergeOptions = git_merge_options()
-                result = git_merge_init_options(&mergeOptions, UInt32(GIT_MERGE_OPTIONS_VERSION))
-                guard result == GIT_OK.rawValue else {
-                    return .failure(NSError(gitError: result,
-                                            pointOfFailure: "git_merge_init_options"))
-                }
+                // Do normal merge
+                return merge(with: oid) { index in
+                    if git_index_has_conflicts(index) != 0 {
+                        // Has Conflicts
+                        git_error_set_str(Int32(GIT_ERROR_MERGE.rawValue), "There are some conflicts.")
+                        return .failure(NSError(gitError: GIT_EMERGECONFLICT.rawValue, pointOfFailure: "git_merge_trees"))
+                    }
 
-                var checkoutOptions = git_checkout_options()
-                result = git_checkout_init_options(&checkoutOptions, UInt32(GIT_CHECKOUT_OPTIONS_VERSION))
-                guard result == GIT_OK.rawValue else {
-                    return .failure(NSError(gitError: result,
-                                            pointOfFailure: "git_checkout_init_options"))
-                }
-
-                checkoutOptions.checkout_strategy = GIT_CHECKOUT_SAFE.rawValue | GIT_CHECKOUT_ALLOW_CONFLICTS.rawValue
-
-                var annotatedCommit: OpaquePointer?
-                git_oid = oid.oid
-                defer { git_annotated_commit_free(annotatedCommit) }
-                result = git_annotated_commit_lookup(&annotatedCommit, self.pointer, &git_oid)
-                guard result == GIT_OK.rawValue else {
-                    return .failure(NSError(gitError: result,
-                                            pointOfFailure: "git_annotated_commit_lookup"))
-                }
-
-                result = git_merge(self.pointer, &annotatedCommit, 1, &mergeOptions, &checkoutOptions)
-                guard result == GIT_OK.rawValue else {
-                    return .failure(NSError(gitError: result,
-                                            pointOfFailure: "git_merge"))
-                }
-
-                // Check conflicts
-                var index: OpaquePointer?
-                defer { git_index_free(index) }
-                result = git_repository_index(&index, self.pointer)
-                guard result == GIT_OK.rawValue else {
-                    return .failure(NSError(gitError: result,
-                                            pointOfFailure: "git_repository_index"))
-                }
-
-                if git_index_has_conflicts(index!) != 0 {
-                    // Has Conflicts
-                    git_error_set_str(Int32(GIT_ERROR_MERGE.rawValue), "There are some conflicts.")
-                    return .failure(NSError(gitError: GIT_EMERGECONFLICT.rawValue, pointOfFailure: "git_merge_trees"))
-                }
-
-                // do a commit if no conflicts
-                return Signature.default(self).flatMap {
-                    $0.makeUnsafeSignature().flatMap {
-                        self.commit(index: index!,
-                                    parentCommits: [targetCommit, sourceCommit],
-                                    message: message,
-                                    signature: $0).flatMap { _ in
-                                        git_repository_state_cleanup(self.pointer);
-                                        return .success(.normal)
+                    // do a commit if no conflicts
+                    return Signature.default(self).flatMap {
+                        $0.makeUnsafeSignature().flatMap {
+                            self.commit(index: index,
+                                        parentCommits: [targetCommit, sourceCommit],
+                                        message: message,
+                                        signature: $0).flatMap { _ in
+                                            git_repository_state_cleanup(self.pointer)
+                                            return .success(.normal)
+                            }
                         }
                     }
                 }
@@ -203,7 +210,54 @@ public extension Repository {
         } catch {
             return .failure(error as NSError)
         }
+    }
 
+    func conflictPaths(index: OpaquePointer) -> Result<[String], NSError> {
+        var iterator: OpaquePointer?
+        var result = git_index_conflict_iterator_new(&iterator, index)
+        defer {
+            git_index_conflict_iterator_free(iterator)
+        }
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result,
+                                    pointOfFailure: "git_index_conflict_iterator_new"))
+        }
+        var paths = [String]()
+        var entry: UnsafePointer<git_index_entry>?
+        var our: UnsafePointer<git_index_entry>?
+        var their: UnsafePointer<git_index_entry>?
+        while true {
+            result = git_index_conflict_next(&entry, &our, &their, iterator!)
+            if result == GIT_ITEROVER.rawValue { break }
+            guard result == GIT_OK.rawValue else {
+                return .failure(NSError(gitError: result,
+                                        pointOfFailure: "git_index_conflict_next"))
+            }
+            paths.append(String(cString: entry!.pointee.path))
+        }
+        return .success(paths)
+    }
+
+    func hasMergeConflict(with oid: OID) -> Result<Bool, NSError> {
+        let stashResult = save(stash: "Check Merge Conflict", keepIndex: true, includeUntracked: true)
+        var stashId: Int = -1
+        switch stashResult {
+        case .success(let stash):
+            stashId = stash.id
+        case .failure(let error):
+            if error.code != GIT_ENOTFOUND.rawValue {
+                return .failure(error)
+            }
+        }
+        return merge(with: oid) { index in
+            let status = git_index_has_conflicts(index) != 0
+            git_repository_state_cleanup(self.pointer)
+            _ = self.reset(type: .hard)
+            if stashId >= 0 {
+                _ = self.pop(stash: stashId)
+            }
+            return .success(status)
+        }
     }
 
 }
