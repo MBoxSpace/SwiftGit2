@@ -42,11 +42,19 @@ public struct OID {
     // MARK: - Properties
 
     public let oid: git_oid
+
+    public var isZero: Bool {
+        var oid = self.oid
+        return git_oid_iszero(&oid) == 1
+    }
 }
 
 extension OID: CustomStringConvertible {
     public var description: String {
-        let length = Int(GIT_OID_RAWSZ) * 2
+        return desc(length: Int(GIT_OID_HEXSZ))
+    }
+
+    public func desc(length: Int) -> String {
         let string = UnsafeMutablePointer<Int8>.allocate(capacity: length)
         var oid = self.oid
         git_oid_fmt(string, &oid)
