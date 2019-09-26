@@ -141,10 +141,10 @@ def parse(executable)
   paths = extract_link_dependencies(executable)
   paths.select! do |path|
     name = change_link_path(executable, path)
-    if ALL_DEPS.include?(File.basename(executable))
+    if ALL_DEPS.include?(File.basename(path))
       false
     else
-      ALL_DEPS << File.basename(executable)
+      ALL_DEPS << File.basename(path)
       true
     end
   end
