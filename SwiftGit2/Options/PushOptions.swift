@@ -15,11 +15,11 @@ public class PushOptions: NSObject {
 
     public var remoteCallback: RemoteCallback
 
-    public init(credentials: Credentials = .default,
+    public init(url: String,
                 messageBlock: MessageBlock? = nil,
                 progressBlock: ProgressBlock? = nil) {
         self.remoteCallback = RemoteCallback(mode: .Push,
-                                             credentials: credentials,
+                                             url: url,
                                              messageBlock: messageBlock,
                                              progressBlock: progressBlock)
     }

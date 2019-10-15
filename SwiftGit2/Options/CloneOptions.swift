@@ -16,14 +16,14 @@ public class CloneOptions {
     public var checkoutBranch: String?
     public var checkoutOptions: CheckoutOptions
 
-    public init(bare: Bool = false,
+    public init(fetchOptions: FetchOptions,
+                bare: Bool = false,
                 localClone: Bool = false,
-                fetchOptions: FetchOptions? = nil,
                 checkoutBranch: String? = nil,
                 checkoutOptions: CheckoutOptions? = nil) {
         self.bare = bare
         self.localClone = localClone
-        self.fetchOptions = fetchOptions ?? FetchOptions()
+        self.fetchOptions = fetchOptions
         self.fetchOptions.remoteCallback.mode = .Clone
         self.checkoutBranch = checkoutBranch
         self.checkoutOptions = checkoutOptions ?? CheckoutOptions()

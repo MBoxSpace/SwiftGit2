@@ -163,6 +163,8 @@ private func updateDescription(_ oid1: OID?, _ oid2: OID?) -> String {
     return msg
 }
 
+var userSSHConfigFile: SSH2.ConfigFile?
+
 public class RemoteCallback {
     public typealias MessageBlock = (String?) -> Void
     public typealias ProgressBlock = (
@@ -174,7 +176,9 @@ public class RemoteCallback {
         _ indexed_deltas: UInt32,
         _ received_bytes: size_t) -> Void
 
-    public var credentials: Credentials
+    public var url: GitURL?
+    public var credentials: [Credentials] = []
+    public var avaliableCredentials: [Credentials]
     public var messageBlock: MessageBlock?
     public var progressBlock: ProgressBlock?
 
@@ -187,13 +191,34 @@ public class RemoteCallback {
     public var mode: Mode
 
     public init(mode: Mode = .Fetch,
-                credentials: Credentials = .default,
+                url: String,
                 messageBlock: MessageBlock? = nil,
                 progressBlock: ProgressBlock? = nil) {
         self.mode = mode
-        self.credentials = credentials
         self.messageBlock = messageBlock
         self.progressBlock = progressBlock
+
+        self.url = GitURL(url)
+        if userSSHConfigFile == nil {
+            let configPath = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".ssh/config").path
+            if FileManager.default.fileExists(atPath: configPath) {
+                userSSHConfigFile = SSH2.ConfigFile.parse(configPath)
+            }
+        }
+        if let host = self.url?.host,
+            self.url?.scheme == "ssh",
+            let user = self.url?.user {
+            if let configFile = userSSHConfigFile,
+                let config = configFile.config(for: host) {
+                for file in config.identityFiles ?? [] {
+                    self.credentials.append(.sshFile(username: user, publicKeyPath: file + ".pub", privateKeyPath: file, passphrase: ""))
+                }
+            }
+            self.credentials.append(.sshAgent)
+        } else {
+            self.credentials.append(.default)
+        }
+        self.avaliableCredentials = self.credentials
     }
 
     static func fromPointer(_ pointer: UnsafeMutableRawPointer) -> RemoteCallback {

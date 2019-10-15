@@ -67,7 +67,8 @@ extension Repository {
         let remoteName = remote ?? (try? self.trackBranch().get().remoteName) ?? "origin"
         return remoteLookup(named: remoteName) { remote in
             remote.flatMap { pointer in
-                var opts = (options ?? FetchOptions()).toGit()
+                let url = String(cString: git_remote_url(pointer))
+                var opts = (options ?? FetchOptions(url: url)).toGit()
                 let result = git_remote_fetch(pointer, nil, &opts, nil)
                 guard result == GIT_OK.rawValue else {
                     let err = NSError(gitError: result, pointOfFailure: "git_remote_fetch")
@@ -111,8 +112,9 @@ extension Repository {
             guard result == GIT_OK.rawValue else {
                 return .failure(NSError(gitError: result, pointOfFailure: "git_remote_lookup"))
             }
+            let url = String(cString: git_remote_url(remoteServer))
 
-            var opts = (options ?? PushOptions()).toGit()
+            var opts = (options ?? PushOptions(url: url)).toGit()
             var branches: git_strarray
             if let branch = branch {
                 let ref = try self.reference(named: branch).get().longName
@@ -142,7 +144,7 @@ extension Repository {
     public class func clone(from remoteURL: URL,
                             to localURL: URL,
                             options: CloneOptions? = nil) -> Result<Repository, NSError> {
-        var opt = (options ?? CloneOptions()).toGitOptions()
+        var opt = (options ?? CloneOptions(fetchOptions: FetchOptions(url: remoteURL.absoluteString))).toGitOptions()
 
         var pointer: OpaquePointer? = nil
         let remoteURLString = (remoteURL as NSURL).isFileReferenceURL() ? remoteURL.path : remoteURL.absoluteString
@@ -166,7 +168,7 @@ extension Repository {
         guard result == GIT_OK.rawValue else {
             return .failure(NSError(gitError: result, pointOfFailure: "git_remote_create_detached"))
         }
-        var callback = (callback ?? RemoteCallback()).toGit()
+        var callback = (callback ?? RemoteCallback(url: url.absoluteString)).toGit()
 
         result = git_remote_connect(remote, GIT_DIRECTION_FETCH, &callback, nil, nil)
         guard result == GIT_OK.rawValue else {

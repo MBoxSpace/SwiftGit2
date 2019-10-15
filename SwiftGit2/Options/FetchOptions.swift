@@ -17,14 +17,15 @@ public class FetchOptions {
     public var prune: Bool
     public var remoteCallback: RemoteCallback
 
-    public init(tags: Bool = true,
+    public init(url: String,
+                tags: Bool = true,
                 prune: Bool = false,
                 credentials: Credentials = .default,
                 messageBlock: MessageBlock? = nil,
                 progressBlock: ProgressBlock? = nil) {
         self.tags = tags
         self.prune = prune
-        self.remoteCallback = RemoteCallback(credentials: credentials,
+        self.remoteCallback = RemoteCallback(url: url,
                                              messageBlock: messageBlock,
                                              progressBlock: progressBlock)
     }

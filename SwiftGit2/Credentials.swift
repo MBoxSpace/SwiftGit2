@@ -79,7 +79,12 @@ internal func credentialsCallback(
     // Find username_from_url
     let name = username.map(String.init(cString:))
 
-    var credentials = RemoteCallback.fromPointer(payload!).credentials
+    let remoteCallback = RemoteCallback.fromPointer(payload!)
+    if remoteCallback.avaliableCredentials.isEmpty {
+        return -1
+    }
+
+    var credentials = remoteCallback.avaliableCredentials.removeFirst()
     if (credentials == .default) && name == "git" {
         // SSH protocol use sshAgent
         credentials = .sshAgent
