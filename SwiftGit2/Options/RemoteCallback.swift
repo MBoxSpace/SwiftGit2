@@ -214,10 +214,16 @@ public class RemoteCallback {
                     self.credentials.append(.sshFile(username: user, publicKeyPath: file + ".pub", privateKeyPath: file, passphrase: ""))
                 }
             }
-            self.credentials.append(.sshAgent)
-        } else {
-            self.credentials.append(.default)
+            let defaultIDs = ["id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", "id_xmss"].flatMap { [$0, $0 + "-cert"] }
+            for name in defaultIDs {
+                let path = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".ssh").appendingPathComponent(name).path
+                if FileManager.default.fileExists(atPath: path) {
+                    self.credentials.append(.sshFile(username: user, publicKeyPath: path + ".pub", privateKeyPath: path, passphrase: ""))
+                }
+            }
         }
+        self.credentials.append(.sshAgent)
+        self.credentials.append(.default)
         self.avaliableCredentials = self.credentials
     }
 
