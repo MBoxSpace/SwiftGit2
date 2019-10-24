@@ -113,6 +113,10 @@ public extension Repository {
         var pointer: OpaquePointer? = nil
         var result = git_reference_lookup(&pointer, self.pointer, name)
 
+        if result == GIT_ENOTFOUND.rawValue {
+            return .success(())
+        }
+
         guard result == GIT_OK.rawValue else {
             return Result.failure(NSError(gitError: result, pointOfFailure: "git_reference_lookup"))
         }
