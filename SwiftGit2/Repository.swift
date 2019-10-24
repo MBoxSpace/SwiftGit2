@@ -77,6 +77,17 @@ public final class Repository {
     /// repository is bare.
     public let directoryURL: URL?
 
+    /**
+     * Get the path of the working directory for this repository
+     *
+     * If the repository is bare, this function will always return NULL.
+     * If the repository is worktree, this function will return the origin repository path.
+     *
+     **/
+    public var originPath: String {
+        return String(cString: git_repository_workdir(self.pointer))
+    }
+
     // MARK: - Object Lookups
 
     /// Load a libgit2 object and transform it to something else.
