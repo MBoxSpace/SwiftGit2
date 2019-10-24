@@ -249,9 +249,9 @@ public class RemoteCallback {
                 callback.push_update_reference = pushUpdateReferenceCallback
                 callback.push_transfer_progress = pushTransferProgress
             }
-            if mode == .Fetch || mode == .Pull {
-                callback.update_tips = updateTipsCallback
-            }
+//            if mode == .Fetch || mode == .Pull {
+//                callback.update_tips = updateTipsCallback
+//            }
         }
         if messageBlock != nil || progressBlock != nil {
             callback.transfer_progress = transferProgressCallback
