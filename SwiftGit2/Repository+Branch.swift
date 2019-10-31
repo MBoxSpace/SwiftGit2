@@ -78,11 +78,11 @@ public extension Repository {
     }
 
     @discardableResult
-    func createBranch(_ name: String, baseBranch: String, baseLocal: Bool = true, force: Bool = false) -> Result<Branch, NSError> {
+    func createBranch(_ name: String, baseBranch: String, force: Bool = false) -> Result<Branch, NSError> {
         if !checkValid("refs/heads/\(name)") {
             return .failure(NSError(gitError: -1, description: "Branch name `\(name)` is invalid."))
         }
-        let result = baseLocal ? localBranch(named: baseBranch) : remoteBranch(named: baseBranch)
+        let result = branch(named: baseBranch)
         return result.flatMap { branch -> Result<Branch, NSError> in
             createBranch(name, oid: branch.oid, force: force)
         }
