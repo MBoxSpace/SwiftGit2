@@ -17,13 +17,10 @@ public struct OID {
     ///
     /// string - A 40-byte hex formatted string.
     public init?(string: String) {
-        // libgit2 doesn't enforce a maximum length
-        if string.lengthOfBytes(using: String.Encoding.ascii) > 40 {
-            return nil
-        }
+        self.length = string.lengthOfBytes(using: String.Encoding.utf8)
 
         let pointer = UnsafeMutablePointer<git_oid>.allocate(capacity: 1)
-        let result = git_oid_fromstr(pointer, string)
+        let result = git_oid_fromstrn(pointer, string, length)
 
         if result < GIT_OK.rawValue {
             pointer.deallocate()
@@ -37,11 +34,17 @@ public struct OID {
     /// Create an instance from a libgit2 `git_oid`.
     public init(_ oid: git_oid) {
         self.oid = oid
+        self.length = size_t(GIT_OID_HEXSZ)
     }
 
     // MARK: - Properties
 
     public let oid: git_oid
+    public let length: size_t
+
+    public var isShort: Bool {
+        return length < GIT_OID_HEXSZ
+    }
 
     public var isZero: Bool {
         var oid = self.oid

@@ -102,8 +102,8 @@ public final class Repository {
     func withGitObject<T>(_ oid: OID, type: git_object_t,
                           transform: (OpaquePointer) -> Result<T, NSError>) -> Result<T, NSError> {
         var pointer: OpaquePointer? = nil
-        var oid = oid.oid
-        let result = git_object_lookup(&pointer, self.pointer, &oid, type)
+        var git_oid = oid.oid
+        let result = git_object_lookup_prefix(&pointer, self.pointer, &git_oid, oid.length, type)
 
         guard result == GIT_OK.rawValue else {
             return Result.failure(NSError(gitError: result, pointOfFailure: "git_object_lookup"))
