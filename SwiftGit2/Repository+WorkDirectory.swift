@@ -64,22 +64,14 @@ extension Repository {
     /// :param: oid The OID to set as HEAD.
     /// :returns: Returns a result with void or the error that occurred.
     public func setHEAD(_ oid: OID) -> Result<(), NSError> {
-        var git_oid = oid.oid
-        if oid.isShort {
-            var commit: OpaquePointer?
-            let result = git_commit_lookup_prefix(&commit, self.pointer, &git_oid, oid.length)
+        return longOID(for: oid).flatMap { oid -> Result<(), NSError> in
+            var git_oid = oid.oid
+            let result = git_repository_set_head_detached(self.pointer, &git_oid)
             guard result == GIT_OK.rawValue else {
-                return Result.failure(NSError(gitError: result, pointOfFailure: "git_commit_lookup_prefix"))
+                return Result.failure(NSError(gitError: result, pointOfFailure: "git_repository_set_head_detached"))
             }
-            let commit_oid = git_commit_id(commit!)
-            git_oid = commit_oid!.pointee
-            git_commit_free(commit!)
+            return Result.success(())
         }
-        let result = git_repository_set_head_detached(self.pointer, &git_oid)
-        guard result == GIT_OK.rawValue else {
-            return Result.failure(NSError(gitError: result, pointOfFailure: "git_repository_set_head_detached"))
-        }
-        return Result.success(())
     }
 
     /// Set HEAD to the given reference.

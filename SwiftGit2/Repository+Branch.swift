@@ -47,24 +47,26 @@ public extension Repository {
     }
 
     private func createBranch(_ name: String, oid: OID, force: Bool = false) -> Result<Branch, NSError> {
-        var oid = oid.oid
-        var commit: OpaquePointer? = nil
-        var result = git_commit_lookup(&commit, self.pointer, &oid)
-        defer { git_commit_free(commit) }
-        guard result == GIT_OK.rawValue else {
-            return .failure(NSError(gitError: result, pointOfFailure: "git_commit_lookup"))
-        }
+        return self.longOID(for: oid).flatMap { oid -> Result<Branch, NSError> in
+            var oid = oid.oid
+            var commit: OpaquePointer? = nil
+            var result = git_commit_lookup(&commit, self.pointer, &oid)
+            defer { git_commit_free(commit) }
+            guard result == GIT_OK.rawValue else {
+                return .failure(NSError(gitError: result, pointOfFailure: "git_commit_lookup"))
+            }
 
-        var newBranch: OpaquePointer? = nil
-        result = git_branch_create(&newBranch, self.pointer, name, commit, force ? 1 : 0)
-        defer { git_reference_free(newBranch) }
-        guard result == GIT_OK.rawValue else {
-            return .failure(NSError(gitError: result, pointOfFailure: "git_branch_create"))
+            var newBranch: OpaquePointer? = nil
+            result = git_branch_create(&newBranch, self.pointer, name, commit, force ? 1 : 0)
+            defer { git_reference_free(newBranch) }
+            guard result == GIT_OK.rawValue else {
+                return .failure(NSError(gitError: result, pointOfFailure: "git_branch_create"))
+            }
+            guard let r = Branch(newBranch!) else {
+                return .failure(NSError(gitError: -1, pointOfFailure: "git_branch_create"))
+            }
+            return .success(r)
         }
-        guard let r = Branch(newBranch!) else {
-            return .failure(NSError(gitError: -1, pointOfFailure: "git_branch_create"))
-        }
-        return .success(r)
     }
 
     @discardableResult
@@ -103,14 +105,18 @@ public extension Repository {
         if !checkValid("refs/heads/\(name)") {
             return .failure(NSError(gitError: -1, description: "Branch name `\(name)` is invalid."))
         }
-        return reference(named: baseCommit).flatMap { commit -> Result<Branch, NSError> in
-            createBranch(name, oid: commit.oid, force: force)
+        guard let oid = OID(string: baseCommit) else {
+            return .failure(NSError(gitError: -1, description: "The commit `\(baseCommit)` is invalid."))
         }
+        return createBranch(name, oid: oid, force: force)
     }
 
     func deleteBranch(_ name: String) -> Result<(), NSError> {
         let name = name.hasPrefix("refs/heads/") ? name : "refs/heads/\(name)"
         var pointer: OpaquePointer? = nil
+        defer {
+            git_reference_free(pointer)
+        }
         var result = git_reference_lookup(&pointer, self.pointer, name)
 
         if result == GIT_ENOTFOUND.rawValue {
@@ -126,7 +132,6 @@ public extension Repository {
             return Result.failure(NSError(gitError: result, pointOfFailure: "git_branch_delete"))
         }
 
-        git_reference_free(pointer)
         return .success(())
     }
 

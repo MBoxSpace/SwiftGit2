@@ -74,6 +74,22 @@ public extension Repository {
         }
     }
 
+    func longOID(for shortOID: OID) -> Result<OID, NSError> {
+        if !shortOID.isShort {
+            return .success(shortOID)
+        }
+        var git_oid = shortOID.oid
+        var commit: OpaquePointer?
+        let result = git_commit_lookup_prefix(&commit, self.pointer, &git_oid, shortOID.length)
+        guard result == GIT_OK.rawValue else {
+            return Result.failure(NSError(gitError: result, pointOfFailure: "git_commit_lookup_prefix"))
+        }
+        let commit_oid = git_commit_id(commit!)
+        git_oid = commit_oid!.pointee
+        git_commit_free(commit!)
+        return .success(OID(git_oid))
+    }
+
     func update(reference name: String, to oid: OID) -> Result<(), NSError> {
         return self.reference(named: name) { pointer -> Result<(), NSError> in
             var newRef: OpaquePointer? = nil
