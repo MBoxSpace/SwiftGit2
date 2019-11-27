@@ -59,10 +59,12 @@ extension OID: CustomStringConvertible {
 
     public func desc(length: Int) -> String {
         let string = UnsafeMutablePointer<Int8>.allocate(capacity: length)
+        defer {
+            string.deallocate()
+        }
         var oid = self.oid
         git_oid_fmt(string, &oid)
-
-        return String(bytesNoCopy: string, length: length, encoding: .ascii, freeWhenDone: true)!
+        return String(bytes: string, count: length)!
     }
 }
 

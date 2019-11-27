@@ -30,4 +30,20 @@ public extension Repository {
     func tag(named name: String) -> Result<TagReference, NSError> {
         return reference(named: "refs/tags/" + name).map { $0 as! TagReference }
     }
+
+    func createTag(named name: String, oid: OID, force: Bool = false) -> Result<(), NSError> {
+        return longOID(for: oid).flatMap { oid -> Result<(), NSError> in
+            var oid = oid.oid
+            var object: OpaquePointer? = nil
+            var result = git_object_lookup(&object, self.pointer, &oid, GIT_OBJECT_COMMIT)
+            guard result == GIT_OK.rawValue else {
+                return .failure(NSError(gitError: result, pointOfFailure: "git_object_lookup"))
+            }
+            result = git_tag_create_lightweight(&oid, self.pointer, name, object!, force ? 1 : 0)
+            guard result == GIT_OK.rawValue else {
+                return .failure(NSError(gitError: result, pointOfFailure: "git_tag_create_lightweight"))
+            }
+            return .success(())
+        }
+    }
 }

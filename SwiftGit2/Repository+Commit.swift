@@ -102,6 +102,15 @@ public extension Repository {
 
     // MARK: - public function
 
+    /// Loads the commit from the HEAD.
+    ///
+    /// Returns the HEAD commit, or an error.
+    func commit() -> Result<Commit, NSError> {
+        self.HEAD().flatMap { ref in
+            commit(ref.oid)
+        }
+    }
+
     /// Loads the commit with the given OID.
     ///
     /// oid - The OID of the commit to look up.

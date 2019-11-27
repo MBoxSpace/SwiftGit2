@@ -94,7 +94,7 @@ extension Signature: Hashable {
 }
 
 /// A git commit.
-public struct Commit: ObjectType, Hashable {
+public struct Commit: ObjectType, Hashable, CustomStringConvertible {
     public static let type = GIT_OBJECT_COMMIT
 
     /// The OID of the commit.
@@ -126,6 +126,18 @@ public struct Commit: ObjectType, Hashable {
         self.parents = (0..<git_commit_parentcount(pointer)).map {
             return PointerTo(OID(git_commit_parent_id(pointer, $0).pointee))
         }
+    }
+
+    public var description: String {
+        var info = ["Commit: \(oid)"]
+        info.append("Parents: \(parents.map { $0.oid.desc(length: 10) }.joined(separator: ", "))")
+        info.append("Author: \(author.name) <\(author.email)>")
+        info.append("Date: \(author.time.description(with: .autoupdatingCurrent))")
+        if author.email != committer.email {
+            info.append("Committer: \(committer.name) <\(committer.email)>")
+        }
+        info.append("Message: \(message)")
+        return info.joined(separator: "\n")
     }
 }
 

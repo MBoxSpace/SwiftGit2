@@ -102,36 +102,34 @@ extension Repository {
         }
     }
 
-    public func push(_ remote: String? = nil,
-                     branch: String? = nil,
-                     options: PushOptions? = nil) -> Result<(), NSError> {
-        do {
-            let remote = try remote ?? self.allRemotes().get().first!.name
-            var remoteServer: OpaquePointer? = nil
-            var result = git_remote_lookup(&remoteServer, self.pointer, remote)
-            guard result == GIT_OK.rawValue else {
-                return .failure(NSError(gitError: result, pointOfFailure: "git_remote_lookup"))
-            }
-            let url = String(cString: git_remote_url(remoteServer))
-
-            var opts = (options ?? PushOptions(url: url)).toGit()
-            var branches: git_strarray
-            if let branch = branch {
-                let ref = try self.reference(named: branch).get().longName
-                var pointer = UnsafeMutablePointer<Int8>(mutating: (ref as NSString).utf8String)
-                branches = git_strarray(strings: &pointer, count: 1)
-            } else {
-                branches = git_strarray()
-            }
-            result = git_remote_push(remoteServer, &branches, &opts)
-            guard result == GIT_OK.rawValue else {
-                return .failure(NSError(gitError: result, pointOfFailure: "git_remote_push"))
-            }
-
-            return .success(())
-        } catch {
-            return .failure(error as NSError)
+    public func push(_ remote: String, refname: String? = nil, options: PushOptions? = nil) -> Result<(), NSError> {
+        var remoteServer: OpaquePointer? = nil
+        var result = git_remote_lookup(&remoteServer, self.pointer, remote)
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result, pointOfFailure: "git_remote_lookup"))
         }
+        let url = String(cString: git_remote_url(remoteServer))
+
+        var opts = (options ?? PushOptions(url: url)).toGit()
+
+        var refs: git_strarray
+        if let refname = refname {
+            do {
+                let name = try self.reference(named: refname).get().longName
+                var pointer = UnsafeMutablePointer<Int8>(mutating: (name as NSString).utf8String)
+                refs = git_strarray(strings: &pointer, count: 1)
+            } catch {
+                return .failure(error as NSError)
+            }
+        } else {
+            refs = git_strarray()
+        }
+        result = git_remote_push(remoteServer, &refs, &opts)
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result, pointOfFailure: "git_remote_push"))
+        }
+
+        return .success(())
     }
 
     /// Clone the repository from a given URL.
