@@ -161,6 +161,7 @@
 		AB62941C2302C7CB00F95DB8 /* Repository+Clean.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB62941A2302C7CB00F95DB8 /* Repository+Clean.swift */; };
 		AB62941E2302C7FE00F95DB8 /* CleanOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB62941D2302C7FE00F95DB8 /* CleanOptions.swift */; };
 		AB62941F2302C7FE00F95DB8 /* CleanOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB62941D2302C7FE00F95DB8 /* CleanOptions.swift */; };
+		ABAA0A0F238FA4EC0020917C /* Repository+Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABAA0A0E238FA4EC0020917C /* Repository+Config.swift */; };
 		ABD52C2023545BC8005FCBF4 /* SSH2.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD52C1F23545BC8005FCBF4 /* SSH2.swift */; };
 		ABD52C2223545BD6005FCBF4 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD52C2123545BD6005FCBF4 /* Config.swift */; };
 		ABD52C242354626A005FCBF4 /* ConfigFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD52C232354626A005FCBF4 /* ConfigFile.swift */; };
@@ -300,6 +301,7 @@
 		AB59040A22C51FB500B03E9E /* CheckoutOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutOptions.swift; sourceTree = "<group>"; };
 		AB62941A2302C7CB00F95DB8 /* Repository+Clean.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Repository+Clean.swift"; sourceTree = "<group>"; };
 		AB62941D2302C7FE00F95DB8 /* CleanOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanOptions.swift; sourceTree = "<group>"; };
+		ABAA0A0E238FA4EC0020917C /* Repository+Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Repository+Config.swift"; sourceTree = "<group>"; };
 		ABD52C1F23545BC8005FCBF4 /* SSH2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSH2.swift; sourceTree = "<group>"; };
 		ABD52C2123545BD6005FCBF4 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		ABD52C232354626A005FCBF4 /* ConfigFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigFile.swift; sourceTree = "<group>"; };
@@ -511,6 +513,7 @@
 				AB4A310F22B799B7005F445B /* Repository+Worktree.swift */,
 				AB34F16D22BBC77D00F9B86B /* Repository+Reset.swift */,
 				AB62941A2302C7CB00F95DB8 /* Repository+Clean.swift */,
+				ABAA0A0E238FA4EC0020917C /* Repository+Config.swift */,
 				AB59040022C50F9300B03E9E /* String+C.swift */,
 				BEB31F281A0D6F7A00F525B9 /* SwiftGit2.h */,
 				BE14AA4F1A1974010015B439 /* SwiftGit2.m */,
@@ -1015,6 +1018,7 @@
 				AB40584122C8AC400067642F /* Repository+Commit.swift in Sources */,
 				AB34F16E22BBC77D00F9B86B /* Repository+Reset.swift in Sources */,
 				BECB5F6E1A57284700999413 /* Remotes.swift in Sources */,
+				ABAA0A0F238FA4EC0020917C /* Repository+Config.swift in Sources */,
 				AB59040422C51F5100B03E9E /* FetchOptions.swift in Sources */,
 				AB59040B22C51FB500B03E9E /* CheckoutOptions.swift in Sources */,
 				AB4A311022B799B8005F445B /* Repository+Worktree.swift in Sources */,
