@@ -19,16 +19,15 @@ public struct OID {
     public init?(string: String) {
         self.length = string.lengthOfBytes(using: String.Encoding.utf8)
 
-        let pointer = UnsafeMutablePointer<git_oid>.allocate(capacity: 1)
-        let result = git_oid_fromstrn(pointer, string, length)
+        let pointer = UnsafeMutablePointer<git_oid>.allocate(capacity: length)
+        defer { pointer.deallocate() }
 
+        let result = git_oid_fromstrn(pointer, string, length)
         if result < GIT_OK.rawValue {
-            pointer.deallocate()
             return nil
         }
 
         oid = pointer.pointee
-        pointer.deallocate()
     }
 
     /// Create an instance from a libgit2 `git_oid`.
@@ -59,11 +58,9 @@ extension OID: CustomStringConvertible {
 
     public func desc(length: Int) -> String {
         let string = UnsafeMutablePointer<Int8>.allocate(capacity: length)
-        defer {
-            string.deallocate()
-        }
+        defer { string.deallocate() }
         var oid = self.oid
-        git_oid_fmt(string, &oid)
+        git_oid_nfmt(string, length, &oid)
         return String(bytes: string, count: length)!
     }
 }

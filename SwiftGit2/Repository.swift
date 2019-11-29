@@ -106,7 +106,7 @@ public final class Repository {
         let result = git_object_lookup_prefix(&pointer, self.pointer, &git_oid, oid.length, type)
 
         guard result == GIT_OK.rawValue else {
-            return Result.failure(NSError(gitError: result, pointOfFailure: "git_object_lookup"))
+            return Result.failure(NSError(gitError: result, pointOfFailure: "git_object_lookup_prefix"))
         }
 
         let value = transform(pointer!)
