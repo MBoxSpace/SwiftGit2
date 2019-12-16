@@ -698,6 +698,7 @@
 				BEB31F1F1A0D6F7A00F525B9 /* Frameworks */,
 				BEB31F201A0D6F7A00F525B9 /* Headers */,
 				ABC770CE22A7FBDA007DE9E4 /* Package external libraries */,
+				ABC0AEC723A77F0D004831A8 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -877,6 +878,23 @@
 			shellPath = /bin/sh;
 			shellScript = "./script/repackage-dylibs.rb\n";
 			showEnvVarsInLog = 0;
+		};
+		ABC0AEC723A77F0D004831A8 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "rsync -avL \"${SRCROOT}/libgit2\" \"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n";
 		};
 		ABC770CE22A7FBDA007DE9E4 /* Package external libraries */ = {
 			isa = PBXShellScriptBuildPhase;
