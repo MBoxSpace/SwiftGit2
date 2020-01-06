@@ -39,11 +39,23 @@ public extension Repository {
         if name.hasPrefix("refs/") {
             return reference(named: name).map { $0 as! Branch }
         }
-        let result = localBranch(named: name)
+        var result = localBranch(named: name)
         if result.isSuccess {
             return result
         }
-        return remoteBranch(named: name)
+        result = remoteBranch(named: name)
+        if result.isSuccess {
+            return result
+        }
+        return self.allRemotes().flatMap { remotes -> Result<Branch, NSError> in
+            for remote in remotes {
+                let branch = remoteBranch(named: "\(remote.name)/\(name)")
+                if branch.isSuccess {
+                    return branch
+                }
+            }
+            return .failure(NSError(gitError: GIT_ENOTFOUND.rawValue, description: "Remote branch `\(name)` does not exist."))
+        }
     }
 
     private func createBranch(_ name: String, oid: OID, force: Bool = false) -> Result<Branch, NSError> {
