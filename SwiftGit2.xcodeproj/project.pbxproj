@@ -876,7 +876,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "./script/repackage-dylibs.rb\n";
+			shellScript = "#./script/repackage-dylibs.rb\n";
 			showEnvVarsInLog = 0;
 		};
 		ABC0AEC723A77F0D004831A8 /* ShellScript */ = {
@@ -1445,7 +1445,7 @@
 					"$(PROJECT_DIR)/Carthage/Build/Mac",
 				);
 				INFOPLIST_FILE = SwiftGit2Tests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../../../../../SwiftGit2.framework/Versions/A/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/../../../SwiftGit2.framework/Versions/A/Frameworks";
 				LIBRARY_SEARCH_PATHS = External;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = "-lgit2";
@@ -1464,7 +1464,7 @@
 					"$(PROJECT_DIR)/Carthage/Build/Mac",
 				);
 				INFOPLIST_FILE = SwiftGit2Tests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../../../../../SwiftGit2.framework/Versions/A/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/../../../SwiftGit2.framework/Versions/A/Frameworks";
 				LIBRARY_SEARCH_PATHS = External;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = "-lgit2";

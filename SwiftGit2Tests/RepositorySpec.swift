@@ -296,7 +296,7 @@ class RepositorySpec: FixturesSpec {
             it("should return a local branch if it is a short branch name") {
                 let name = "master"
                 let result = Fixtures.simpleRepository.reference(named: name)
-                expect(result.map { $0.shortName }.value) == "master"
+                expect(result.map { $0.shortName }.value!) == "master"
                 expect(result.map { $0.longName }.value) == "refs/heads/master"
                 expect(result.value as? Branch).notTo(beNil())
             }

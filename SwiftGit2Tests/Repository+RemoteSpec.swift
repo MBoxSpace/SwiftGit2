@@ -144,7 +144,7 @@ class RepositoryRemoteSpec: FixturesSpec {
                 let localURL = self.temporaryURL(forPurpose: "local-clone")
                 let result = Repository.clone(from: remoteRepo.directoryURL!,
                                               to: localURL,
-                                              options: CloneOptions(localClone: true))
+                                              options: CloneOptions(fetchOptions: FetchOptions(url: localURL.absoluteString), localClone: true))
 
                 expect(result.error).to(beNil())
 
@@ -158,7 +158,7 @@ class RepositoryRemoteSpec: FixturesSpec {
                 let localURL = self.temporaryURL(forPurpose: "bare-clone")
                 let result = Repository.clone(from: remoteRepo.directoryURL!,
                                               to: localURL,
-                                              options: CloneOptions(bare: true, localClone: true))
+                                              options: CloneOptions(fetchOptions: FetchOptions(url: localURL.absoluteString), bare: true, localClone: true))
 
                 expect(result.error).to(beNil())
 
@@ -172,7 +172,7 @@ class RepositoryRemoteSpec: FixturesSpec {
                 let localURL = self.temporaryURL(forPurpose: "valid-remote-clone")
                 let cloneResult = Repository.clone(from: remoteRepo.directoryURL!,
                                                    to: localURL,
-                                                   options: CloneOptions(localClone: true))
+                                                   options: CloneOptions(fetchOptions: FetchOptions(url: localURL.absoluteString), localClone: true))
 
                 expect(cloneResult.error).to(beNil())
 
@@ -208,7 +208,7 @@ class RepositoryRemoteSpec: FixturesSpec {
                 let localURL = self.temporaryURL(forPurpose: "public-remote-ssh-clone")
                 let cloneResult = Repository.clone(from: remoteRepoURL!,
                                                    to: localURL,
-                                                   options: CloneOptions(checkoutBranch: "1-0-stable"))
+                                                   options: CloneOptions(fetchOptions: FetchOptions(url: localURL.absoluteString), checkoutBranch: "1-0-stable"))
 
                 expect(cloneResult.error).to(beNil())
 
@@ -248,7 +248,7 @@ class RepositoryRemoteSpec: FixturesSpec {
                                                             publicKey: publicKey,
                                                             privateKey: privateKey,
                                                             passphrase: passphrase)
-                    let fetchOptions = FetchOptions(credentials: credentials)
+                    let fetchOptions = FetchOptions(url: localURL.absoluteString, credentials: credentials)
                     let cloneResult = Repository.clone(from: remoteRepoURL!,
                                                        to: localURL,
                                                        options: CloneOptions(fetchOptions: fetchOptions))

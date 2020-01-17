@@ -13,8 +13,8 @@ import Quick
 class OIDSpec: QuickSpec {
     override func spec() {
         describe("OID(string:)") {
-            it("should be nil if string is too short") {
-                expect(OID(string: "123456789012345678901234567890123456789")).to(beNil())
+            it("should not be nil if string is short") {
+                expect(OID(string: "123456789012345678901234567890123456789")).notTo(beNil())
             }
 
             it("should be nil if string is too long") {
