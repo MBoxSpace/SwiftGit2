@@ -161,6 +161,7 @@
 		AB62941C2302C7CB00F95DB8 /* Repository+Clean.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB62941A2302C7CB00F95DB8 /* Repository+Clean.swift */; };
 		AB62941E2302C7FE00F95DB8 /* CleanOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB62941D2302C7FE00F95DB8 /* CleanOptions.swift */; };
 		AB62941F2302C7FE00F95DB8 /* CleanOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB62941D2302C7FE00F95DB8 /* CleanOptions.swift */; };
+		AB7650EB23D4371300F9CD79 /* git2 in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB7650EA23D4370900F9CD79 /* git2 */; };
 		ABAA0A0F238FA4EC0020917C /* Repository+Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABAA0A0E238FA4EC0020917C /* Repository+Config.swift */; };
 		ABD52C2023545BC8005FCBF4 /* SSH2.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD52C1F23545BC8005FCBF4 /* SSH2.swift */; };
 		ABD52C2223545BD6005FCBF4 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD52C2123545BD6005FCBF4 /* Config.swift */; };
@@ -262,6 +263,16 @@
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AB76509423D4366F00F9CD79 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Headers;
+			dstSubfolderSpec = 1;
+			files = (
+				AB7650EB23D4371300F9CD79 /* git2 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -301,6 +312,8 @@
 		AB59040A22C51FB500B03E9E /* CheckoutOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutOptions.swift; sourceTree = "<group>"; };
 		AB62941A2302C7CB00F95DB8 /* Repository+Clean.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Repository+Clean.swift"; sourceTree = "<group>"; };
 		AB62941D2302C7FE00F95DB8 /* CleanOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanOptions.swift; sourceTree = "<group>"; };
+		AB76509023D435B100F9CD79 /* SwiftGit2.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = SwiftGit2.modulemap; sourceTree = "<group>"; };
+		AB7650EA23D4370900F9CD79 /* git2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = git2; path = External/libgit2/include/git2; sourceTree = "<group>"; };
 		ABAA0A0E238FA4EC0020917C /* Repository+Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Repository+Config.swift"; sourceTree = "<group>"; };
 		ABD52C1F23545BC8005FCBF4 /* SSH2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSH2.swift; sourceTree = "<group>"; };
 		ABD52C2123545BD6005FCBF4 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
@@ -402,6 +415,7 @@
 		621E66D41C72965C00A0F352 /* Mac */ = {
 			isa = PBXGroup;
 			children = (
+				AB7650EA23D4370900F9CD79 /* git2 */,
 				AB34F18222C0EB8100F9B86B /* Nimble.framework */,
 				AB34F18122C0EB8100F9B86B /* Quick.framework */,
 				AB34F18022C0EB8100F9B86B /* ZipArchive.framework */,
@@ -462,6 +476,7 @@
 		BEB31F191A0D6F7A00F525B9 = {
 			isa = PBXGroup;
 			children = (
+				AB76509023D435B100F9CD79 /* SwiftGit2.modulemap */,
 				ABD52C1E23545B78005FCBF4 /* libSSH2 */,
 				BEB31F251A0D6F7A00F525B9 /* SwiftGit2 */,
 				BEB31F261A0D6F7A00F525B9 /* Supporting Files */,
@@ -694,11 +709,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = BEB31F391A0D6F7A00F525B9 /* Build configuration list for PBXNativeTarget "SwiftGit2-OSX" */;
 			buildPhases = (
+				AB76509423D4366F00F9CD79 /* CopyFiles */,
 				BEB31F1E1A0D6F7A00F525B9 /* Sources */,
 				BEB31F1F1A0D6F7A00F525B9 /* Frameworks */,
 				BEB31F201A0D6F7A00F525B9 /* Headers */,
 				ABC770CE22A7FBDA007DE9E4 /* Package external libraries */,
-				ABC0AEC723A77F0D004831A8 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -878,23 +893,6 @@
 			shellPath = /bin/sh;
 			shellScript = "#./script/repackage-dylibs.rb\n";
 			showEnvVarsInLog = 0;
-		};
-		ABC0AEC723A77F0D004831A8 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "rsync -avL \"${SRCROOT}/libgit2\" \"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n";
 		};
 		ABC770CE22A7FBDA007DE9E4 /* Package external libraries */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1388,6 +1386,7 @@
 					/usr/local/opt/openssl/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MODULEMAP_FILE = SwiftGit2.modulemap;
 				OTHER_LDFLAGS = (
 					"-lgit2",
 					"-lssh2",
@@ -1421,6 +1420,7 @@
 					/usr/local/opt/openssl/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MODULEMAP_FILE = SwiftGit2.modulemap;
 				OTHER_LDFLAGS = (
 					"-lgit2",
 					"-lssh2",
