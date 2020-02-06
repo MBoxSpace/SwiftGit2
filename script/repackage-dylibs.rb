@@ -30,7 +30,7 @@ def warn(msg)
 end
 
 def note(msg)
-  puts "note: " + msg
+  puts msg
 end
 
 envvars = %w(
@@ -66,7 +66,9 @@ def search_library(name)
   return nil
 end
 
-ALL_DEPS = []
+TODO_DEPS = []
+COPIED_DEPS = []
+
 def extract_link_dependencies(executable)
   unless File.exist?(executable)
     warn "executable not exists: #{executable}"
@@ -82,8 +84,6 @@ def extract_link_dependencies(executable)
     err "Failed to parse #{dep}" if path.nil?
 
     name = File.basename(path)
-    next if ALL_DEPS.include?(name)
-    ALL_DEPS << name
 
     dep = OpenStruct.new
     dep.is_self = (File.basename(path) == File.basename(executable))
@@ -111,103 +111,65 @@ end
 def repackage_dependency(dep)
   return if dep.is_self or dep.path =~ /^(\/usr\/lib|\/System\/Library)/
 
-  note "Packaging #{dep.name}…"
+  note "==================== Packaging #{dep.name} for #{File.basename(dep.executable)} ===================="
 
   FileUtils.mkdir(TARGET_FRAMEWORKS_PATH) unless Dir.exist?(TARGET_FRAMEWORKS_PATH)
-  packaged_path = File.join(TARGET_FRAMEWORKS_PATH, File.basename(dep[:library_path]))
-  puts "path: #{packaged_path}"
+
+  install_name = if dep.type == ".framework"
+      dep.path.sub(/.*\/(.*?.framework)/, '\1')
+    else
+      dep.name
+    end
+  packaged_path = File.join(TARGET_FRAMEWORKS_PATH, install_name)
+
   case dep.type
   when ".dylib", ".framework"
-    if File.exist? packaged_path
-      note "#{packaged_path} already in Frameworks directory, removing"
-      FileUtils.rm_rf packaged_path
+    unless COPIED_DEPS.include?(dep.name)
+      if File.exist? packaged_path
+        note "#{packaged_path} already in Frameworks directory, removing"
+        FileUtils.rm_rf packaged_path
+      end
+      note "Copying #{dep.library_path} to #{TARGET_FRAMEWORKS_PATH}"
+      `rsync -av --copy-links "#{dep.library_path}" "#{TARGET_FRAMEWORKS_PATH}"`
+      COPIED_DEPS << dep.name
+
+      TODO_DEPS.concat extract_link_dependencies(packaged_path)
+
+      FileUtils.chmod "u=rw", packaged_path
+      fix_install_id(packaged_path, install_name)
     end
 
-    note "Copying #{dep[:library_path]} to #{TARGET_FRAMEWORKS_PATH}"
-    `rsync -av --copy-links "#{dep[:library_path]}" "#{TARGET_FRAMEWORKS_PATH}"`
-#    FileUtils.chmod "u=rw", packaged_path
-
     unless dep.is_packaged
-#      note "install_name_tool -change #{dep.install_name} #{dep.install_name.sub('Versions/A/', "")} #{dep.executable}"
-#      out = `install_name_tool -change #{dep.install_name} "#{dep.install_name.sub('Versions/A/', "")}" #{dep.executable}`
-#      if $? != 0
-#        err "install_name_tool failed with error #{$?}:\n#{out}"
-#      end
+
+      cmd = "install_name_tool -change #{dep.install_name} @rpath/#{install_name} #{dep.executable}"
+      note cmd
+      out = `#{cmd}`
+      if $? != 0
+        err "install_name_tool failed with error #{$?}:\n#{out}"
+      end
 
       dep.path = packaged_path
-      dep.install_name = "@rpath/#{dep.name}"
-      dep.is_packaged = true      
+      dep.install_name = "@rpath/#{install_name}"
+      dep.is_packaged = true
     end
   else
     warn "Unhandled type #{dep.type} for #{dep.path}, ignoring"
   end
 end
 
-def fix_install_id(dep)
-  note "Fixing #{dep.name} install_name id…"
-  out = `install_name_tool -id @rpath/#{dep.name.sub('Versions/A/', "")} #{dep.executable}`
+def fix_install_id(path, name)
+  note "Fixing #{path} install_name: @rpath/#{name}"
+  cmd = "install_name_tool -id @rpath/#{name} #{path}"
+  note cmd
+  out = `#{cmd}`
   if $? != 0
     err "install_name_tool failed with error #{$?}:\n#{out}"
   end
 end
 
-link_deps = []
-deps = extract_link_dependencies(TARGET_EXECUTABLE_PATH)
-while (dep = deps.shift) do
-  if dep.name.start_with?("MBox")
-    dep_name = File.basename(dep.library_path, '.*')
-    link_deps << dep_name if dep_name != File.basename(TARGET_EXECUTABLE_PATH, '.*')
-  else
-    repackage_dependency dep
-  end
-#  fix_install_id dep
-#  deps += extract_link_dependencies(dep[:path]) if dep.is_packaged and not dep.is_self and dep.path
-end
-
-# 生成 podspec
-def framework_paths(name)
-  return [] unless name.end_with?(".framework")
-  path = File.join(name, "Versions/A/Frameworks")
-  return [] unless File.exists?(path)
-  files = Dir[path + "/*"]
-  return [] if files.empty?
-  return [path] + files.flat_map { |file| framework_paths(file) }
-end
-
-podspec_path = File.join(SRCROOT, NAME + ".podspec")
-puts podspec_path
-if File.exist?(podspec_path)
-  require 'cocoapods-core'
-  spec = Pod::Specification.from_file(podspec_path)
-  subspec = begin
-    spec.subspec_by_name("#{NAME}/Core")
-  rescue
-    spec
-  end
-  Dir.chdir(TARGET_BUILD_DIR) do
-    frameworks = framework_paths(FULL_PRODUCT_NAME)
-    modulemaps = frameworks.flat_map { |path|
-      Dir["#{path}/*/"].select { |name|
-        !name.end_with?(".framework/")
-      }
-    }.map { |file|
-      "\"${PODS_ROOT}/#{spec.name}/#{file[0...-1]}\""
-    }
-    search_paths = frameworks.map { |file|
-      "\"${PODS_ROOT}/#{spec.name}/#{file}\""
-    }
-
-    xcconfig = subspec.attributes_hash["user_target_xcconfig"] || {}
-    xcconfig["FRAMEWORK_SEARCH_PATHS"] = search_paths.join(" ") unless search_paths.empty?
-    xcconfig["SWIFT_INCLUDE_PATHS"] = modulemaps.join(" ") unless modulemaps.empty?
-    subspec.user_target_xcconfig = xcconfig unless xcconfig.empty?
-
-    subspec.source_files = []
-    subspec.vendored_frameworks = FULL_PRODUCT_NAME
-
-    out_podspec_path = File.join(TARGET_BUILD_DIR, "#{NAME}.podspec.json")
-    File.write(out_podspec_path, spec.to_pretty_json)
-  end
+TODO_DEPS.concat extract_link_dependencies(TARGET_EXECUTABLE_PATH)
+while (dep = TODO_DEPS.shift) do
+  repackage_dependency dep
 end
 
 note "Packaging done"
