@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import libgit2
+import git2
 
 public extension Repository {
     /// Load all the references with the given prefix (e.g. "refs/heads/")
@@ -51,7 +51,7 @@ public extension Repository {
     }
 
     internal func reference<T>(named name: String, block: (OpaquePointer) -> Result<T, NSError>) -> Result<T, NSError> {
-        if name.hasPrefix("refs/") || name == "HEAD" {
+        if name.isLongRef || name == "HEAD" {
             return self.reference(longName: name) { pointer -> Result<T, NSError> in
                 return block(pointer)
             }

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import libgit2
+import git2
 
 extension Repository {
     // MARK: - Remote Lookups
@@ -102,7 +102,9 @@ extension Repository {
         }
     }
 
-    public func push(_ remote: String, refname: String? = nil, options: PushOptions? = nil) -> Result<(), NSError> {
+    // source and target reference must be a long name.
+    // if source is empty, means delete a reference.
+    public func push(_ remote: String, sourceRef: String, targetRef: String, force: Bool = false, options: PushOptions? = nil) -> Result<(), NSError> {
         var remoteServer: OpaquePointer? = nil
         var result = git_remote_lookup(&remoteServer, self.pointer, remote)
         guard result == GIT_OK.rawValue else {
@@ -112,18 +114,9 @@ extension Repository {
 
         var opts = (options ?? PushOptions(url: url)).toGit()
 
-        var refs: git_strarray
-        if let refname = refname {
-            do {
-                let name = try self.reference(named: refname).get().longName
-                var pointer = UnsafeMutablePointer<Int8>(mutating: (name as NSString).utf8String)
-                refs = git_strarray(strings: &pointer, count: 1)
-            } catch {
-                return .failure(error as NSError)
-            }
-        } else {
-            refs = git_strarray()
-        }
+        let refname = "\(force ? "+":"")\(sourceRef):\(targetRef)"
+        var pointer = UnsafeMutablePointer<Int8>(mutating: (refname as NSString).utf8String)
+        var refs = git_strarray(strings: &pointer, count: 1)
         result = git_remote_push(remoteServer, &refs, &opts)
         guard result == GIT_OK.rawValue else {
             return .failure(NSError(gitError: result, pointOfFailure: "git_remote_push"))
@@ -188,7 +181,7 @@ extension Repository {
     }
 
     public class func remoteBranches(at url: URL, callback: RemoteCallback? = nil) -> Result<[String], NSError> {
-        let prefix = "refs/heads/"
+        let prefix = String.branchPrefix
         return lsRemote(at: url, callback: callback).flatMap {
             .success($0.compactMap {
                 $0.starts(with: prefix) ? String($0.dropFirst(prefix.count)) : nil
@@ -197,7 +190,7 @@ extension Repository {
     }
 
     public class func remoteTags(at url: URL, callback: RemoteCallback? = nil) -> Result<[String], NSError> {
-        let prefix = "refs/tags/"
+        let prefix = String.tagPrefix
         let subffix = "^{}"
         return lsRemote(at: url, callback: callback).flatMap {
             .success($0.compactMap {

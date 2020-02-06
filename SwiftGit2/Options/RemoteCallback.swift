@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-import libgit2
+import git2
 
 /**
  * Type for messages delivered by the transport.  Return a negative value
@@ -80,8 +80,8 @@ private func pushNegotiationCallback(updates: UnsafeMutablePointer<UnsafePointer
             for i in 0..<len {
                 let data = updates[i]
                 var dst_refname = String(cString: data.dst_refname)
-                if dst_refname.hasPrefix("refs/remotes/") {
-                    dst_refname = String(dst_refname.dropFirst("refs/remotes/".count))
+                if dst_refname.isRemoteRef {
+                    dst_refname = dst_refname.shortRef
                 }
                 let src_oid = OID(data.src)
                 let dst_oid = OID(data.dst)
@@ -138,8 +138,8 @@ private func updateTipsCallback(refname: UnsafePointer<Int8>?, a: UnsafePointer<
             }
             if oldOID != newOID {
                 var name = String(cString: refname)
-                if name.hasPrefix("refs/remotes/") {
-                    name = String(name.dropFirst("refs/remotes/".count))
+                if name.isRemoteRef {
+                    name = name.shortRef
                 }
                 block("\(updateDescription(oldOID, newOID))  \(name)\n")
             }
@@ -235,7 +235,7 @@ public class RemoteCallback {
         return Unmanaged.passRetained(self).toOpaque()
     }
 
-    func toGit() -> git_remote_callbacks {
+    internal func toGit() -> git_remote_callbacks {
         let pointer = UnsafeMutablePointer<git_remote_callbacks>.allocate(capacity: 1)
         git_remote_init_callbacks(pointer, UInt32(GIT_REMOTE_CALLBACKS_VERSION))
         var callback = pointer.pointee

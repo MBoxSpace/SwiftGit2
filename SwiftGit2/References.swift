@@ -6,7 +6,44 @@
 //  Copyright (c) 2015 GitHub, Inc. All rights reserved.
 //
 
-import libgit2
+import git2
+
+extension String {
+    public static let tagPrefix = "refs/tags/"
+    public static let branchPrefix = "refs/heads/"
+    public static let remotePrefix = "refs/remotes/"
+
+    public var longBranchRef: String {
+        return self.isLongRef ? self : "\(String.branchPrefix)\(self)"
+    }
+
+    public var longTagRef: String {
+        return self.isLongRef ? self : "\(String.tagPrefix)\(self)"
+    }
+
+    public var isLongRef: Bool {
+        return self.hasPrefix("refs/")
+    }
+
+    public var isBranchRef: Bool {
+        return self.hasPrefix(.branchPrefix)
+    }
+
+    public var isTagRef: Bool {
+        return self.hasPrefix(.tagPrefix)
+    }
+
+    public var isRemoteRef: Bool {
+        return self.hasPrefix(.remotePrefix)
+    }
+
+    public var shortRef: String {
+        if !isLongRef { return self }
+        let pieces = self.split(separator: "/")
+        if pieces.count < 3 { return self }
+        return pieces.dropFirst(2).joined(separator: "/")
+    }
+}
 
 /// A reference to a git object.
 public protocol BaseReferenceType {
@@ -120,10 +157,10 @@ public struct Branch: ReferenceType, Hashable {
     public var oid: OID { return commit.oid }
 
     /// Whether the branch is a local branch.
-    public var isLocal: Bool { return longName.hasPrefix("refs/heads/") }
+    public var isLocal: Bool { return longName.isBranchRef }
 
     /// Whether the branch is a remote branch.
-    public var isRemote: Bool { return longName.hasPrefix("refs/remotes/") }
+    public var isRemote: Bool { return longName.isRemoteRef }
 
     /// Whether the branch is a unborn branch. If it is unborn, the oid will be invalid.
     public var isUnborn: Bool = false
@@ -186,7 +223,7 @@ public enum TagReference: ReferenceType, Hashable {
 
     /// The short human-readable name of the branch (e.g., `master`).
     public var name: String {
-        return String(longName["refs/tags/".endIndex...])
+        return longName.shortRef
     }
 
     /// The OID of the target object.

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import libgit2
+import git2
 
 public class FetchOptions {
     public typealias MessageBlock = RemoteCallback.MessageBlock

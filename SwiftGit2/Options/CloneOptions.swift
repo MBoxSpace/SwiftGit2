@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import libgit2
+import git2
 
 public class CloneOptions {
     public var bare: Bool

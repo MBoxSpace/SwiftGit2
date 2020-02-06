@@ -7,36 +7,36 @@
 //
 
 import Foundation
-import libgit2
+import git2
 
 public extension Repository {
     /// Load and return a list of all local branches.
     func localBranches() -> Result<[Branch], NSError> {
-        return references(withPrefix: "refs/heads/").map { (refs: [ReferenceType]) in
+        return references(withPrefix: .branchPrefix).map { (refs: [ReferenceType]) in
             return refs.map { $0 as! Branch }
         }
     }
 
     /// Load and return a list of all remote branches.
     func remoteBranches() -> Result<[Branch], NSError> {
-        return references(withPrefix: "refs/remotes/").map { (refs: [ReferenceType]) in
+        return references(withPrefix: .remotePrefix).map { (refs: [ReferenceType]) in
             return refs.map { $0 as! Branch }
         }
     }
 
     /// Load the local branch with the given name (e.g., "master").
     func localBranch(named name: String) -> Result<Branch, NSError> {
-        return reference(named: "refs/heads/" + name).map { $0 as! Branch }
+        return reference(named: .branchPrefix + name).map { $0 as! Branch }
     }
 
     /// Load the remote branch with the given name (e.g., "origin/master").
     func remoteBranch(named name: String) -> Result<Branch, NSError> {
-        return reference(named: "refs/remotes/" + name).map { $0 as! Branch }
+        return reference(named: .remotePrefix + name).map { $0 as! Branch }
     }
 
     /// Load the local/remote branch with the given name (e.g., "master").
     func branch(named name: String) -> Result<Branch, NSError> {
-        if name.hasPrefix("refs/") {
+        if name.isLongRef {
             return reference(named: name).map { $0 as! Branch }
         }
         var result = localBranch(named: name)
@@ -69,7 +69,7 @@ public extension Repository {
             }
 
             var newBranch: OpaquePointer? = nil
-            result = git_branch_create(&newBranch, self.pointer, name, commit, force ? 1 : 0)
+            result = git_branch_create(&newBranch, self.pointer, name.shortRef, commit, force ? 1 : 0)
             defer { git_reference_free(newBranch) }
             guard result == GIT_OK.rawValue else {
                 return .failure(NSError(gitError: result, pointOfFailure: "git_branch_create"))
@@ -83,7 +83,7 @@ public extension Repository {
 
     @discardableResult
     func createBranch(_ name: String, force: Bool = false) -> Result<Branch, NSError> {
-        if !checkValid("refs/heads/\(name)") {
+        if !checkValid(name.longBranchRef) {
             return .failure(NSError(gitError: -1, description: "Branch name `\(name)` is invalid."))
         }
         return HEAD().flatMap { reference -> Result<Branch, NSError> in
@@ -93,7 +93,7 @@ public extension Repository {
 
     @discardableResult
     func createBranch(_ name: String, baseBranch: String, force: Bool = false) -> Result<Branch, NSError> {
-        if !checkValid("refs/heads/\(name)") {
+        if !checkValid(name.longBranchRef) {
             return .failure(NSError(gitError: -1, description: "Branch name `\(name)` is invalid."))
         }
         let result = branch(named: baseBranch)
@@ -104,7 +104,7 @@ public extension Repository {
 
     @discardableResult
     func createBranch(_ name: String, baseTag: String, force: Bool = false) -> Result<Branch, NSError> {
-        if !checkValid("refs/heads/\(name)") {
+        if !checkValid(name.longBranchRef) {
             return .failure(NSError(gitError: -1, description: "Branch name `\(name)` is invalid."))
         }
         return tag(named: baseTag).flatMap { tag -> Result<Branch, NSError> in
@@ -114,7 +114,7 @@ public extension Repository {
 
     @discardableResult
     func createBranch(_ name: String, baseCommit: String, force: Bool = false) -> Result<Branch, NSError> {
-        if !checkValid("refs/heads/\(name)") {
+        if !checkValid(name.longBranchRef) {
             return .failure(NSError(gitError: -1, description: "Branch name `\(name)` is invalid."))
         }
         guard let oid = OID(string: baseCommit) else {
@@ -123,8 +123,13 @@ public extension Repository {
         return createBranch(name, oid: oid, force: force)
     }
 
+    func deleteBranch(_ name: String, remote: String, force: Bool = false) -> Result<(), NSError> {
+        let name = name.longBranchRef
+        return self.push(remote, sourceRef: "", targetRef: name, force: force)
+    }
+
     func deleteBranch(_ name: String) -> Result<(), NSError> {
-        let name = name.hasPrefix("refs/heads/") ? name : "refs/heads/\(name)"
+        let name = name.longBranchRef
         var pointer: OpaquePointer? = nil
         defer {
             git_reference_free(pointer)

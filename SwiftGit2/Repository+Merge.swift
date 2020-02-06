@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import libgit2
+import git2
 
 public struct GitMergeAnalysisStatus: OptionSet {
     public let rawValue: UInt32

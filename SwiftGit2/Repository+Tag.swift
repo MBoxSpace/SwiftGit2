@@ -7,12 +7,12 @@
 //
 
 import Foundation
-import libgit2
+import git2
 
 public extension Repository {
     /// Load and return a list of all the `TagReference`s.
     func allTags() -> Result<[TagReference], NSError> {
-        return references(withPrefix: "refs/tags/").map { (refs: [ReferenceType]) in
+        return references(withPrefix: .tagPrefix).map { (refs: [ReferenceType]) in
             return refs.map { $0 as! TagReference }
         }
     }
@@ -28,7 +28,7 @@ public extension Repository {
 
     /// Load the tag with the given name (e.g., "tag-2").
     func tag(named name: String) -> Result<TagReference, NSError> {
-        return reference(named: "refs/tags/" + name).map { $0 as! TagReference }
+        return reference(named: name.longTagRef).map { $0 as! TagReference }
     }
 
     func createTag(named name: String, oid: OID, force: Bool = false) -> Result<(), NSError> {

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import libgit2
+import git2
 
 extension Repository {
     public func hasConflicts() -> Result<Bool, NSError> {
@@ -76,9 +76,17 @@ extension Repository {
 
     /// Set HEAD to the given reference.
     ///
-    /// :param: longName The long name to set as HEAD.
+    /// :param: name The name to set as HEAD.
     /// :returns: Returns a result with void or the error that occurred.
-    public func setHEAD(_ longName: String) -> Result<(), NSError> {
+    public func setHEAD(_ name: String) -> Result<(), NSError> {
+        var longName = name
+        if !name.isLongRef {
+            do {
+                longName = try self.reference(named: name).get().longName
+            } catch {
+                return .failure(error as NSError)
+            }
+        }
         let result = git_repository_set_head(self.pointer, longName)
         guard result == GIT_OK.rawValue else {
             return Result.failure(NSError(gitError: result, pointOfFailure: "git_repository_set_head"))

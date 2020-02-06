@@ -8,9 +8,9 @@ set -x
 PATH="$(pwd)/External:/usr/local/bin:$PATH"
 export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/opt/openssl/lib/pkgconfig"
 
-product="libgit2.a"
+product="git2.framework/git2"
 
-if [ "External/${product}" -nt "External/libgit2" ]
+if [ "${product}" -nt "External/libgit2" ]
 then
     echo "No update needed."
     exit 0
@@ -23,13 +23,15 @@ fi
 mkdir build
 cd build
 
-cmake -DBUILD_SHARED_LIBS:BOOL=OFF \
+cmake -DBUILD_SHARED_LIBS:BOOL=ON \
     -DLIBSSH2_INCLUDE_DIRS:PATH=$(pwd)/External/libssh2/include \
     -DBUILD_CLAR:BOOL=OFF \
     -DTHREADSAFE:BOOL=ON \
     ..
 cmake --build .
 
-cp -av libgit2.a ../..
+rsync -av --copy-links libgit2.dylib ../../git2.framework/git2
+cd "../../git2.framework"
+install_name_tool -id @rpath/git2.framework/git2 git2
 
-echo "libgit2 has been updated."
+echo "git2.framework has been updated."

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import libgit2
+import git2
 
 public struct Stash {
     public var id: Int

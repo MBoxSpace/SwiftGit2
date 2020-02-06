@@ -161,7 +161,7 @@
 		AB62941C2302C7CB00F95DB8 /* Repository+Clean.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB62941A2302C7CB00F95DB8 /* Repository+Clean.swift */; };
 		AB62941E2302C7FE00F95DB8 /* CleanOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB62941D2302C7FE00F95DB8 /* CleanOptions.swift */; };
 		AB62941F2302C7FE00F95DB8 /* CleanOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB62941D2302C7FE00F95DB8 /* CleanOptions.swift */; };
-		AB7650EB23D4371300F9CD79 /* git2 in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB7650EA23D4370900F9CD79 /* git2 */; };
+		AB7650F123D46CAA00F9CD79 /* Repository+PushSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7650EF23D46C6600F9CD79 /* Repository+PushSpec.swift */; };
 		ABAA0A0F238FA4EC0020917C /* Repository+Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABAA0A0E238FA4EC0020917C /* Repository+Config.swift */; };
 		ABD52C2023545BC8005FCBF4 /* SSH2.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD52C1F23545BC8005FCBF4 /* SSH2.swift */; };
 		ABD52C2223545BD6005FCBF4 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD52C2123545BD6005FCBF4 /* Config.swift */; };
@@ -263,16 +263,6 @@
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AB76509423D4366F00F9CD79 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = Headers;
-			dstSubfolderSpec = 1;
-			files = (
-				AB7650EB23D4371300F9CD79 /* git2 in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -312,8 +302,7 @@
 		AB59040A22C51FB500B03E9E /* CheckoutOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutOptions.swift; sourceTree = "<group>"; };
 		AB62941A2302C7CB00F95DB8 /* Repository+Clean.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Repository+Clean.swift"; sourceTree = "<group>"; };
 		AB62941D2302C7FE00F95DB8 /* CleanOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanOptions.swift; sourceTree = "<group>"; };
-		AB76509023D435B100F9CD79 /* SwiftGit2.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = SwiftGit2.modulemap; sourceTree = "<group>"; };
-		AB7650EA23D4370900F9CD79 /* git2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = git2; path = External/libgit2/include/git2; sourceTree = "<group>"; };
+		AB7650EF23D46C6600F9CD79 /* Repository+PushSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Repository+PushSpec.swift"; sourceTree = "<group>"; };
 		ABAA0A0E238FA4EC0020917C /* Repository+Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Repository+Config.swift"; sourceTree = "<group>"; };
 		ABD52C1F23545BC8005FCBF4 /* SSH2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSH2.swift; sourceTree = "<group>"; };
 		ABD52C2123545BD6005FCBF4 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
@@ -415,7 +404,6 @@
 		621E66D41C72965C00A0F352 /* Mac */ = {
 			isa = PBXGroup;
 			children = (
-				AB7650EA23D4370900F9CD79 /* git2 */,
 				AB34F18222C0EB8100F9B86B /* Nimble.framework */,
 				AB34F18122C0EB8100F9B86B /* Quick.framework */,
 				AB34F18022C0EB8100F9B86B /* ZipArchive.framework */,
@@ -476,7 +464,6 @@
 		BEB31F191A0D6F7A00F525B9 = {
 			isa = PBXGroup;
 			children = (
-				AB76509023D435B100F9CD79 /* SwiftGit2.modulemap */,
 				ABD52C1E23545B78005FCBF4 /* libSSH2 */,
 				BEB31F251A0D6F7A00F525B9 /* SwiftGit2 */,
 				BEB31F261A0D6F7A00F525B9 /* Supporting Files */,
@@ -555,6 +542,7 @@
 				ABEADFB522C270C9000014EF /* Repository+RemoteSpec.swift */,
 				AB40586022C910CA0067642F /* Repository+MergeSpec.swift */,
 				AB0FF4F022CF5D830011C0B8 /* Repository+StashSpec.swift */,
+				AB7650EF23D46C6600F9CD79 /* Repository+PushSpec.swift */,
 				BECB5F6B1A56F1B400999413 /* ReferencesSpec.swift */,
 				BECB5F6F1A57286200999413 /* RemotesSpec.swift */,
 				BE14AA581A1996B70015B439 /* FixturesSpec.swift */,
@@ -709,7 +697,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = BEB31F391A0D6F7A00F525B9 /* Build configuration list for PBXNativeTarget "SwiftGit2-OSX" */;
 			buildPhases = (
-				AB76509423D4366F00F9CD79 /* CopyFiles */,
 				BEB31F1E1A0D6F7A00F525B9 /* Sources */,
 				BEB31F1F1A0D6F7A00F525B9 /* Frameworks */,
 				BEB31F201A0D6F7A00F525B9 /* Headers */,
@@ -911,7 +898,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "./script/repackage-dylibs.rb\n";
+			shellScript = "export LANG=en_US.UTF-8\nexport LANGUAGE=en_US.UTF-8\nexport LC_ALL=en_US.UTF-8\nruby ./script/repackage-dylibs.rb\n";
 			showEnvVarsInLog = 0;
 		};
 		ABEADFBD22C38F0E000014EF /* ShellScript */ = {
@@ -1074,6 +1061,7 @@
 				BE14AA591A1996B70015B439 /* FixturesSpec.swift in Sources */,
 				BE14AA551A1984550015B439 /* Fixtures.swift in Sources */,
 				BECB5F6C1A56F1B400999413 /* ReferencesSpec.swift in Sources */,
+				AB7650F123D46CAA00F9CD79 /* Repository+PushSpec.swift in Sources */,
 				BE70B3E71A1ACB37002C3F4E /* OIDSpec.swift in Sources */,
 				AB0FF4F422CF5E050011C0B8 /* Repository+StashSpec.swift in Sources */,
 				C98A2BA22263FDB9007A4E3A /* ResultShims.swift in Sources */,
@@ -1374,6 +1362,7 @@
 				APPLICATION_EXTENSION_API_ONLY = NO;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
+				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)";
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/External/libgit2/include",
 					"$(inherited)",
@@ -1386,9 +1375,10 @@
 					/usr/local/opt/openssl/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MODULEMAP_FILE = SwiftGit2.modulemap;
+				MODULEMAP_FILE = "";
 				OTHER_LDFLAGS = (
-					"-lgit2",
+					"-framework",
+					git2,
 					"-lssh2",
 					"-lcrypto",
 					"-lssl",
@@ -1396,7 +1386,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.libgit2.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = SwiftGit2;
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/libgit2";
+				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 			};
 			name = Debug;
@@ -1408,6 +1398,7 @@
 				APPLICATION_EXTENSION_API_ONLY = NO;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
+				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)";
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/External/libgit2/include",
 					"$(inherited)",
@@ -1420,9 +1411,10 @@
 					/usr/local/opt/openssl/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MODULEMAP_FILE = SwiftGit2.modulemap;
+				MODULEMAP_FILE = "";
 				OTHER_LDFLAGS = (
-					"-lgit2",
+					"-framework",
+					git2,
 					"-lssh2",
 					"-lcrypto",
 					"-lssl",
@@ -1430,7 +1422,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.libgit2.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = SwiftGit2;
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/libgit2";
+				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 			};
 			name = Release;
@@ -1443,12 +1435,16 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/Mac",
+					"$(SRCROOT)",
 				);
 				INFOPLIST_FILE = SwiftGit2Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/../../../SwiftGit2.framework/Versions/A/Frameworks";
 				LIBRARY_SEARCH_PATHS = External;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				OTHER_LDFLAGS = "-lgit2";
+				OTHER_LDFLAGS = (
+					"-framework",
+					git2,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.libgit2.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1462,12 +1458,16 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/Mac",
+					"$(SRCROOT)",
 				);
 				INFOPLIST_FILE = SwiftGit2Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/../../../SwiftGit2.framework/Versions/A/Frameworks";
 				LIBRARY_SEARCH_PATHS = External;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				OTHER_LDFLAGS = "-lgit2";
+				OTHER_LDFLAGS = (
+					"-framework",
+					git2,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.libgit2.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

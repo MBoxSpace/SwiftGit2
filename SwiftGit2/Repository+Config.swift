@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import libgit2
+import git2
 
 public extension Repository {
     private static func openConfig<T>(block: (OpaquePointer) -> Result<T, NSError>) -> Result<T, NSError> {

@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 GitHub, Inc. All rights reserved.
 //
 
-import libgit2
+import git2
 
 /// An identifier for a Git object.
 public struct OID {
@@ -31,7 +31,7 @@ public struct OID {
     }
 
     /// Create an instance from a libgit2 `git_oid`.
-    public init(_ oid: git_oid) {
+    init(_ oid: git_oid) {
         self.oid = oid
         self.length = size_t(GIT_OID_HEXSZ)
     }

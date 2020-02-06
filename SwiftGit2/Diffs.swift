@@ -6,14 +6,14 @@
 //  Copyright © 2017 GitHub, Inc. All rights reserved.
 //
 
-import libgit2
+import git2
 
 public struct StatusEntry {
     public var status: Diff.Status
     public var headToIndex: Diff.Delta?
     public var indexToWorkDir: Diff.Delta?
 
-    public init(from statusEntry: git_status_entry) {
+    init(from statusEntry: git_status_entry) {
         self.status = Diff.Status(rawValue: statusEntry.status.rawValue)
 
         if let htoi = statusEntry.head_to_index {

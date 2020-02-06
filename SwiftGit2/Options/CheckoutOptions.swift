@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import libgit2
+import git2
 
 /// Helper function used as the libgit2 progress callback in git_checkout_options.
 /// This is a function with a type signature of git_checkout_progress_cb.

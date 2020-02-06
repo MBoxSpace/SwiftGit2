@@ -42,3 +42,4 @@ fastlane/screenshots/screenshots.html
 fastlane/test_output
 test_output
 *.dylib
+git2.framework/git2
