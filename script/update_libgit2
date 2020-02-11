@@ -30,8 +30,8 @@ cmake -DBUILD_SHARED_LIBS:BOOL=ON \
     ..
 cmake --build .
 
-rsync -av --copy-links libgit2.dylib ../../git2.framework/git2
-cd "../../git2.framework"
+rsync -av --copy-links libgit2.dylib ../../../git2.framework/git2
+cd "../../../git2.framework"
 install_name_tool -id @rpath/git2.framework/git2 git2
 
 echo "git2.framework has been updated."
