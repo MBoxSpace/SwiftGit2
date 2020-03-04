@@ -10,30 +10,33 @@ import Foundation
 import git2
 
 public extension Repository {
-    private static func openConfig<T>(block: (OpaquePointer) -> Result<T, NSError>) -> Result<T, NSError> {
-        var config: OpaquePointer?
-        var result = git_config_open_default(&config)
-        guard result == GIT_OK.rawValue else {
-            return Result.failure(NSError(gitError: result, pointOfFailure: "git_config_open_default"))
-        }
-        defer { git_config_free(config!) }
-
-        var snapshot: OpaquePointer?
-        result = git_config_snapshot(&snapshot, config!)
-        guard result == GIT_OK.rawValue else {
-            return Result.failure(NSError(gitError: result, pointOfFailure: "git_config_snapshot"))
-        }
-        return block(snapshot!)
+    var config: Config {
+        return try! Config.open(repository: self).get()
     }
 
-    static func getConfig(for path: String) -> Result<String, NSError> {
-        openConfig { config -> Result<String, NSError> in
-            var value: UnsafePointer<Int8>?
-            let result = path.withCString { git_config_get_string(&value, config, $0) }
+    var configPath: String? {
+        var buf = git_buf()
+        defer { git_buf_dispose(&buf) }
+        guard git_repository_item_path(&buf, self.pointer, GIT_REPOSITORY_ITEM_CONFIG) == 0 else { return nil }
+        return String(cString: buf.ptr)
+    }
+
+    var worktreeConfigPath: String? {
+        var buf = git_buf()
+        defer { git_buf_dispose(&buf) }
+        guard git_repository_item_path(&buf, self.pointer, GIT_REPOSITORY_ITEM_GITDIR) == 0 else { return nil }
+        let path = String(cString: buf.ptr)
+        return NSString(string: path).appendingPathComponent("config.worktree")
+    }
+
+    func addConfig(path: String, level: Config.Level) -> Result<(), NSError> {
+        path.withCString { (value) -> Result<(), NSError> in
+            let result = git_config_add_file_ondisk(self.config.config, value,  git_config_level_t(rawValue: level.rawValue), self.pointer, 1)
             guard result == GIT_OK.rawValue else {
-                return Result.failure(NSError(gitError: result, pointOfFailure: "git_config_get_string"))
+                return .failure(NSError(gitError: result, pointOfFailure: "git_config_add_file_ondisk"))
             }
-            return .success(String(cString: value!))
+            return .success(())
         }
     }
+
 }
