@@ -5,12 +5,14 @@ framework module git2 {
 	module * { export * }
 
 	// Exclude headers intended only for Microsoft compilers
-	exclude header "git2/inttypes.h"
 	exclude header "git2/stdint.h"
+    exclude header "git2/cred_helpers.h"
     exclude header "git2/sys/mempack.h"
     exclude header "git2/sys/alloc.h"
     exclude header "git2/sys/commit.h"
     exclude header "git2/sys/config.h"
+    exclude header "git2/sys/cred.h"
+    exclude header "git2/sys/credential.h"
     exclude header "git2/sys/diff.h"
     exclude header "git2/sys/filter.h"
     exclude header "git2/sys/hashsig.h"
@@ -24,13 +26,13 @@ framework module git2 {
     exclude header "git2/sys/refs.h"
     exclude header "git2/sys/repository.h"
     exclude header "git2/sys/stream.h"
-    exclude header "git2/sys/time.h"
     exclude header "git2/sys/transport.h"
 	// Explicit modules for headers not included in the umbrella header:
 	explicit module cred_helpers {
-		header "git2/cred_helpers.h"
+        header "git2/credential.h"
+        header "git2/credential_helpers.h"
 
-		export *
+        export *
 	}
 
 	explicit module trace {

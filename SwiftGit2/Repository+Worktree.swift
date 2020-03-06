@@ -27,9 +27,9 @@ public extension Repository {
 
         let options = UnsafeMutablePointer<git_worktree_prune_options>.allocate(capacity: 1)
         defer { options.deallocate() }
-        let optionsResult = git_worktree_prune_init_options(options, UInt32(GIT_WORKTREE_PRUNE_OPTIONS_VERSION))
+        let optionsResult = git_worktree_prune_options_init(options, UInt32(GIT_WORKTREE_PRUNE_OPTIONS_VERSION))
         guard optionsResult == GIT_OK.rawValue else {
-            return .failure(NSError(gitError: optionsResult, pointOfFailure: "git_worktree_prune_init_options"))
+            return .failure(NSError(gitError: optionsResult, pointOfFailure: "git_worktree_prune_options_init"))
         }
 
         if force {

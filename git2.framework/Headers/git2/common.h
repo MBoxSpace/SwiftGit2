@@ -21,10 +21,7 @@
 #endif
 
 #if defined(_MSC_VER) && _MSC_VER < 1800
- GIT_BEGIN_DECL
-# include "inttypes.h"
- GIT_END_DECL
-/** This check is needed for importing this file in an iOS/OS X framework throws an error in Xcode otherwise.*/
+# include <stdint.h>
 #endif
 
 #ifdef DOCURIUM
@@ -118,8 +115,9 @@ GIT_BEGIN_DECL
  * @param major Store the major version number
  * @param minor Store the minor version number
  * @param rev Store the revision (patch) number
+ * @return 0 on success or an error code on failure
  */
-GIT_EXTERN(void) git_libgit2_version(int *major, int *minor, int *rev);
+GIT_EXTERN(int) git_libgit2_version(int *major, int *minor, int *rev);
 
 /**
  * Combinations of these values describe the features with which libgit2
@@ -203,7 +201,9 @@ typedef enum {
 	GIT_OPT_SET_ALLOCATOR,
 	GIT_OPT_ENABLE_UNSAVED_INDEX_SAFETY,
 	GIT_OPT_GET_PACK_MAX_OBJECTS,
-	GIT_OPT_SET_PACK_MAX_OBJECTS
+	GIT_OPT_SET_PACK_MAX_OBJECTS,
+	GIT_OPT_DISABLE_PACK_KEEP_FILE_CHECKS,
+	GIT_OPT_ENABLE_HTTP_EXPECT_CONTINUE
 } git_libgit2_opt_t;
 
 /**
@@ -392,6 +392,15 @@ typedef enum {
  *
  *		> Set the maximum number of objects libgit2 will allow in a pack
  *		> file when downloading a pack file from a remote.
+ *
+ *	 opts(GIT_OPT_DISABLE_PACK_KEEP_FILE_CHECKS, int enabled)
+ *		> This will cause .keep file existence checks to be skipped when
+ *		> accessing packfiles, which can help performance with remote filesystems.
+ *
+ *	 opts(GIT_OPT_ENABLE_HTTP_EXPECT_CONTINUE, int enabled)
+ *		> When connecting to a server using NTLM or Negotiate
+ *		> authentication, use expect/continue when POSTing data.
+ *		> This option is not available on Windows.
  *
  * @param option Option key
  * @param ... value to set the option

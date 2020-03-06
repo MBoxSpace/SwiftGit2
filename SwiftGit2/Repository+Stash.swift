@@ -99,7 +99,7 @@ public extension Repository {
         var applyOptions = applyOptionsPointer.move()
         applyOptionsPointer.deallocate()
 
-        if index { applyOptions.flags = GIT_STASH_APPLY_REINSTATE_INDEX }
+        if index { applyOptions.flags = GIT_STASH_APPLY_REINSTATE_INDEX.rawValue }
 
         let result = git_stash_apply(self.pointer, stash, &applyOptions)
         if result != GIT_OK.rawValue {
@@ -115,7 +115,7 @@ public extension Repository {
         var applyOptions = applyOptionsPointer.move()
         applyOptionsPointer.deallocate()
 
-        if index { applyOptions.flags = GIT_STASH_APPLY_REINSTATE_INDEX }
+        if index { applyOptions.flags = GIT_STASH_APPLY_REINSTATE_INDEX.rawValue }
 
         let result = git_stash_pop(self.pointer, stash, &applyOptions)
         if result != GIT_OK.rawValue {

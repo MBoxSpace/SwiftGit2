@@ -7,6 +7,7 @@
 //
 
 import git2
+import git2.cred_helpers
 
 private class Wrapper<T> {
     let value: T
@@ -27,21 +28,21 @@ public enum Credentials: Equatable {
     case sshFile(username: String, publicKeyPath: String, privateKeyPath: String, passphrase: String)
     case sshMemory(username: String, publicKey: String, privateKey: String, passphrase: String)
 
-    /// see `git_credtype_t`
-    internal var type: git_credtype_t {
+    /// see `git_credential_t`
+    internal var type: git_credential_t {
         switch self {
         case .default:
-            return GIT_CREDTYPE_DEFAULT
+            return GIT_CREDENTIAL_DEFAULT
         case .username:
-            return GIT_CREDTYPE_USERNAME
+            return GIT_CREDENTIAL_USERNAME
         case .plaintext:
-            return GIT_CREDTYPE_USERPASS_PLAINTEXT
+            return GIT_CREDENTIAL_USERPASS_PLAINTEXT
         case .sshAgent:
-            return git_credtype_t(rawValue: GIT_CREDTYPE_SSH_MEMORY.rawValue + GIT_CREDTYPE_SSH_KEY.rawValue)
+            return git_credential_t(rawValue: GIT_CREDENTIAL_SSH_MEMORY.rawValue + GIT_CREDENTIAL_SSH_KEY.rawValue)
         case .sshFile:
-            return GIT_CREDTYPE_SSH_KEY
+            return GIT_CREDENTIAL_SSH_KEY
         case .sshMemory:
-            return GIT_CREDTYPE_SSH_MEMORY
+            return GIT_CREDENTIAL_SSH_MEMORY
         }
     }
 
@@ -68,7 +69,7 @@ public enum Credentials: Equatable {
 /// Converts the result to the correct error code required by libgit2 (0 = success, 1 = rejected setting creds,
 /// -1 = error)
 internal func credentialsCallback(
-    cred: UnsafeMutablePointer<UnsafeMutablePointer<git_cred>?>?,
+    cred: UnsafeMutablePointer<OpaquePointer?>?,
     url: UnsafePointer<CChar>?,
     username: UnsafePointer<CChar>?,
     allowTypes: UInt32,
@@ -96,17 +97,17 @@ internal func credentialsCallback(
 
     switch credentials {
     case .default:
-        result = git_cred_default_new(cred)
+        result = git_credential_default_new(cred)
     case .username(let username):
-        result = git_cred_username_new(cred, username)
+        result = git_credential_username_new(cred, username)
     case .plaintext(let username, let password):
-        result = git_cred_userpass_plaintext_new(cred, username, password)
+        result = git_credential_userpass_plaintext_new(cred, username, password)
     case .sshAgent:
-        result = git_cred_ssh_key_from_agent(cred, name!)
+        result = git_credential_ssh_key_from_agent(cred, name!)
     case .sshFile(let username, let publicKeyPath, let privateKeyPath, _):
-        result = git_cred_ssh_key_new(cred, username, publicKeyPath, privateKeyPath, "")
+        result = git_credential_ssh_key_new(cred, username, publicKeyPath, privateKeyPath, "")
     case .sshMemory(let username, let publicKey, let privateKey, let passphrase):
-        result = git_cred_ssh_key_memory_new(cred, username, publicKey, privateKey, passphrase)
+        result = git_credential_ssh_key_memory_new(cred, username, publicKey, privateKey, passphrase)
     }
 
     return (result != GIT_OK.rawValue) ? -1 : 0
