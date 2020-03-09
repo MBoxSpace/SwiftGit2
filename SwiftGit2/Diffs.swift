@@ -32,15 +32,30 @@ public struct Diff {
     public var deltas = [Delta]()
 
     public struct Delta {
+        public enum Status: UInt32 {
+            case unmodified     = 0     /**< no changes */
+            case added          = 1     /**< entry does not exist in old version */
+            case deleted        = 2     /**< entry does not exist in new version */
+            case modified       = 3     /**< entry content changed between old and new */
+            case renamed        = 4     /**< entry was renamed between old and new */
+            case copied         = 5     /**< entry was copied from another old entry */
+            case ignored        = 6     /**< entry is ignored item in workdir */
+            case untracked      = 7     /**< entry is untracked item in workdir */
+            case typeChange     = 8     /**< type of entry changed between old and new */
+            case unreadable     = 9     /**< entry is unreadable */
+            case conflicted     = 10    /**< entry in the index is conflicted */
+        }
         public static let type = GIT_OBJECT_REF_DELTA
 
         public var status: Status
+        public var statusName: String
         public var flags: Flags
         public var oldFile: File?
         public var newFile: File?
 
         public init(_ delta: git_diff_delta) {
-            self.status = Status(rawValue: UInt32(git_diff_status_char(delta.status)))
+            self.status = Status(rawValue: delta.status.rawValue)!
+            self.statusName = String(UnicodeScalar(UInt8(git_diff_status_char(delta.status))))
             self.flags = Flags(rawValue: delta.flags)
             self.oldFile = File(delta.old_file)
             self.newFile = File(delta.new_file)
@@ -94,10 +109,10 @@ public struct Diff {
         }
         public let rawValue: UInt32
 
-        public static let binary     = Flags([])
-        public static let notBinary  = Flags(rawValue: 1 << 0)
-        public static let validId    = Flags(rawValue: 1 << 1)
-        public static let exists     = Flags(rawValue: 1 << 2)
+        public static let binary     = Flags(rawValue: 1 << 0)
+        public static let notBinary  = Flags(rawValue: 1 << 1)
+        public static let validId    = Flags(rawValue: 1 << 2)
+        public static let exists     = Flags(rawValue: 1 << 3)
     }
 
     /// Create an instance with a libgit2 `git_diff`.
