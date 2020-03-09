@@ -67,6 +67,7 @@ public struct Diff {
         public var path: String
         public var size: UInt64
         public var flags: Flags
+        public var mode: UInt32
 
         public init(_ diffFile: git_diff_file) {
             self.oid = OID(diffFile.id)
@@ -74,6 +75,7 @@ public struct Diff {
             self.path = path.map(String.init(cString:))!
             self.size = diffFile.size
             self.flags = Flags(rawValue: diffFile.flags)
+            self.mode = UInt32(diffFile.mode)
         }
     }
 

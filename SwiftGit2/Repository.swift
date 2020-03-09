@@ -57,8 +57,9 @@ public final class Repository {
     /// Create an instance with a libgit2 `git_repository` object.
     ///
     /// The Repository assumes ownership of the `git_repository` object.
-    public init(_ pointer: OpaquePointer) {
+    public init(_ pointer: OpaquePointer, submodule: Submodule? = nil) {
         self.pointer = pointer
+        self.submodule = submodule
 
         let path = git_repository_workdir(pointer)
         self.directoryURL = path.map({ URL(fileURLWithPath: String(validatingUTF8: $0)!, isDirectory: true) })
@@ -87,6 +88,8 @@ public final class Repository {
     public var originPath: String {
         return String(cString: git_repository_workdir(self.pointer))
     }
+
+    public var submodule: Submodule?
 
     // MARK: - Object Lookups
 
@@ -231,7 +234,8 @@ public final class Repository {
 
     // MARK: - Status
 
-    public func status() -> Result<[StatusEntry], NSError> {
+    public func status(options: StatusOptions? = nil) -> Result<[StatusEntry], NSError> {
+        let options = options ?? .includeUntracked
         var returnArray = [StatusEntry]()
 
         // Do this because GIT_STATUS_OPTIONS_INIT is unavailable in swift
@@ -240,13 +244,13 @@ public final class Repository {
         guard optionsResult == GIT_OK.rawValue else {
             return .failure(NSError(gitError: optionsResult, pointOfFailure: "git_status_init_options"))
         }
-        var options = pointer.move()
-        options.flags = GIT_STATUS_OPT_INCLUDE_UNTRACKED.rawValue | GIT_STATUS_OPT_RECURSE_UNTRACKED_DIRS.rawValue
+        var opts = pointer.move()
+        opts.flags = options.rawValue
         pointer.deallocate()
 
         var unsafeStatus: OpaquePointer? = nil
         defer { git_status_list_free(unsafeStatus) }
-        let statusResult = git_status_list_new(&unsafeStatus, self.pointer, &options)
+        let statusResult = git_status_list_new(&unsafeStatus, self.pointer, &opts)
         guard statusResult == GIT_OK.rawValue, let unwrapStatusResult = unsafeStatus else {
             return .failure(NSError(gitError: statusResult, pointOfFailure: "git_status_list_new"))
         }

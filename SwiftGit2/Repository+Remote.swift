@@ -134,8 +134,10 @@ extension Repository {
     /// Returns a `Result` with a `Repository` or an error.
     public class func clone(from remoteURL: URL,
                             to localURL: URL,
-                            options: CloneOptions? = nil) -> Result<Repository, NSError> {
-        var opt = (options ?? CloneOptions(fetchOptions: FetchOptions(url: remoteURL.absoluteString))).toGitOptions()
+                            options: CloneOptions? = nil,
+                            recurseSubmodules: Bool? = nil) -> Result<Repository, NSError> {
+        let options = options ?? CloneOptions(fetchOptions: FetchOptions(url: remoteURL.absoluteString))
+        var opt = options.toGitOptions()
 
         var pointer: OpaquePointer? = nil
         let remoteURLString = (remoteURL as NSURL).isFileReferenceURL() ? remoteURL.path : remoteURL.absoluteString
@@ -148,6 +150,15 @@ extension Repository {
         }
 
         let repository = Repository(pointer!)
+        if recurseSubmodules != false {
+            let submoduleOptions = Submodule.UpdateOptions(fetchOptions: options.fetchOptions, checkoutOptions: options.checkoutOptions)
+            repository.eachSubmodule { (submodule) -> Int32 in
+                if recurseSubmodules == true || submodule.recurseFetch != .no {
+                    submodule.update(options: submoduleOptions, init: true, rescurse: recurseSubmodules)
+                }
+                return GIT_OK.rawValue
+            }
+        }
         return Result.success(repository)
     }
 
