@@ -115,9 +115,11 @@ extension Repository {
         var opts = (options ?? PushOptions(url: url)).toGit()
 
         let refname = "\(force ? "+":"")\(sourceRef):\(targetRef)"
-        var pointer = UnsafeMutablePointer<Int8>(mutating: (refname as NSString).utf8String)
-        var refs = git_strarray(strings: &pointer, count: 1)
-        result = git_remote_push(remoteServer, &refs, &opts)
+        var charName = UnsafeMutablePointer<Int8>(mutating: (refname as NSString).utf8String)
+        result = withUnsafeMutablePointer(to: &charName) { pointer in
+            var refs = git_strarray(strings: pointer, count: 1)
+            return git_remote_push(remoteServer, &refs, &opts)
+        }
         guard result == GIT_OK.rawValue else {
             return .failure(NSError(gitError: result, pointOfFailure: "git_remote_push"))
         }

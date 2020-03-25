@@ -143,21 +143,22 @@ extension Repository {
 
     /// Stage the file(s) under the specified path.
     public func add(path: String) -> Result<(), NSError> {
-        let dir = path
-        var dirPointer = UnsafeMutablePointer<Int8>(mutating: (dir as NSString).utf8String)
-        var paths = git_strarray(strings: &dirPointer, count: 1)
-        return unsafeIndex().flatMap { index in
-            defer { git_index_free(index) }
-            let addResult = git_index_add_all(index, &paths, 0, nil, nil)
-            guard addResult == GIT_OK.rawValue else {
-                return .failure(NSError(gitError: addResult, pointOfFailure: "git_index_add_all"))
+        var dirPointer = UnsafeMutablePointer<Int8>(mutating: (path as NSString).utf8String)
+        return withUnsafeMutablePointer(to: &dirPointer) { pointer in
+            var paths = git_strarray(strings: pointer, count: 1)
+            return unsafeIndex().flatMap { index in
+                defer { git_index_free(index) }
+                let addResult = git_index_add_all(index, &paths, 0, nil, nil)
+                guard addResult == GIT_OK.rawValue else {
+                    return .failure(NSError(gitError: addResult, pointOfFailure: "git_index_add_all"))
+                }
+                // write index to disk
+                let writeResult = git_index_write(index)
+                guard writeResult == GIT_OK.rawValue else {
+                    return .failure(NSError(gitError: writeResult, pointOfFailure: "git_index_write"))
+                }
+                return .success(())
             }
-            // write index to disk
-            let writeResult = git_index_write(index)
-            guard writeResult == GIT_OK.rawValue else {
-                return .failure(NSError(gitError: writeResult, pointOfFailure: "git_index_write"))
-            }
-            return .success(())
         }
     }
 }
