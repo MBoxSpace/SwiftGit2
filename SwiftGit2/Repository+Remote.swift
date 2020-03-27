@@ -17,10 +17,12 @@ extension Repository {
     /// Returns an array of remotes, or an error.
     public func allRemotes() -> Result<[Remote], NSError> {
         let pointer = UnsafeMutablePointer<git_strarray>.allocate(capacity: 1)
+        defer {
+            pointer.deallocate()
+        }
         let result = git_remote_list(pointer, self.pointer)
 
         guard result == GIT_OK.rawValue else {
-            pointer.deallocate()
             return Result.failure(NSError(gitError: result, pointOfFailure: "git_remote_list"))
         }
 
@@ -29,7 +31,6 @@ extension Repository {
             return self.remote(named: $0)
         }
         git_strarray_free(pointer)
-        pointer.deallocate()
 
         return remotes.aggregateResult()
     }
@@ -164,33 +165,49 @@ extension Repository {
         return Result.success(repository)
     }
 
+    class func preProcessURL(_ url: URL) -> Result<String, NSError> {
+        if (url as NSURL).isFileReferenceURL() {
+            return .success(url.path)
+        } else {
+            return Config.default().flatMap {
+                $0.insteadOf(originURL: url.absoluteString, direction: .Fetch)
+            }
+        }
+    }
     public class func lsRemote(at url: URL, callback: RemoteCallback? = nil) -> Result<[String], NSError> {
-        var remote: OpaquePointer? = nil
+        return preProcessURL(url).flatMap { remoteURLString in
+            let opts = UnsafeMutablePointer<git_remote_create_options>.allocate(capacity: 1)
+            defer { opts.deallocate() }
+            var result = git_remote_create_options_init(opts, UInt32(GIT_REMOTE_CREATE_OPTIONS_VERSION))
+            guard result == GIT_OK.rawValue else {
+                return .failure(NSError(gitError: result, pointOfFailure: "git_remote_create_options_init"))
+            }
 
-        let remoteURLString = (url as NSURL).isFileReferenceURL() ? url.path : url.absoluteString
-        var result = git_remote_create_detached(&remote, remoteURLString)
-        guard result == GIT_OK.rawValue else {
-            return .failure(NSError(gitError: result, pointOfFailure: "git_remote_create_detached"))
-        }
-        var callback = (callback ?? RemoteCallback(url: url.absoluteString)).toGit()
+            var remote: OpaquePointer? = nil
+            result = git_remote_create_with_opts(&remote, remoteURLString, opts)
+            guard result == GIT_OK.rawValue else {
+                return .failure(NSError(gitError: result, pointOfFailure: "git_remote_create_detached"))
+            }
+            var callback = (callback ?? RemoteCallback(url: url.absoluteString)).toGit()
 
-        result = git_remote_connect(remote, GIT_DIRECTION_FETCH, &callback, nil, nil)
-        guard result == GIT_OK.rawValue else {
-            return .failure(NSError(gitError: result, pointOfFailure: "git_remote_connect"))
-        }
+            result = git_remote_connect(remote, GIT_DIRECTION_FETCH, &callback, nil, nil)
+            guard result == GIT_OK.rawValue else {
+                return .failure(NSError(gitError: result, pointOfFailure: "git_remote_connect"))
+            }
 
-        var count: Int = 0
-        var headsPointer: UnsafeMutablePointer<UnsafePointer<git_remote_head>?>? = nil
-        result = git_remote_ls(&headsPointer, &count, remote)
-        guard result == GIT_OK.rawValue else {
-            return .failure(NSError(gitError: result, pointOfFailure: "git_remote_ls"))
+            var count: Int = 0
+            var headsPointer: UnsafeMutablePointer<UnsafePointer<git_remote_head>?>? = nil
+            result = git_remote_ls(&headsPointer, &count, remote)
+            guard result == GIT_OK.rawValue else {
+                return .failure(NSError(gitError: result, pointOfFailure: "git_remote_ls"))
+            }
+            var names = [String]()
+            for i in 0..<count {
+                let head = (headsPointer! + i).pointee!.pointee
+                names.append(String(cString: head.name))
+            }
+            return .success(names)
         }
-        var names = [String]()
-        for i in 0..<count {
-            let head = (headsPointer! + i).pointee!.pointee
-            names.append(String(cString: head.name))
-        }
-        return .success(names)
     }
 
     public class func remoteBranches(at url: URL, callback: RemoteCallback? = nil) -> Result<[String], NSError> {

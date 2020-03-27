@@ -10,6 +10,11 @@ import git2
 
 /// A remote in a git repository.
 public struct Remote: Hashable {
+    public enum Direction: Int32 {
+        case Fetch = 0 // GIT_DIRECTION_FETCH
+        case Push  = 1 //GIT_DIRECTION_PUSH
+    }
+
     /// The name of the remote.
     public let name: String
 

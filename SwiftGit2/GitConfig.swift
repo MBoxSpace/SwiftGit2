@@ -180,6 +180,31 @@ public class Config {
         }
     }
 
+    func each(regex: String, block: (git_config_entry) -> Bool) -> Result<(), NSError> {
+        return regex.withCString { regexp in
+            var iter: OpaquePointer? = nil
+            git_config_iterator_glob_new(&iter, self.config, regexp)
+            defer { git_config_iterator_free(iter!) }
+
+            var entry: UnsafeMutablePointer<git_config_entry>! = UnsafeMutablePointer<git_config_entry>.allocate(capacity: 1)
+            defer {
+                // Do not release entry! It will be released by iter
+                // entry.deallocate()
+            }
+            while (true) {
+                let result = git_config_next(&entry, iter!)
+                guard result != GIT_ITEROVER.rawValue else { break }
+                guard result == GIT_OK.rawValue else {
+                    return .failure(NSError(gitError: result, pointOfFailure: "git_config_next"))
+                }
+                if block(entry.pointee) {
+                    break
+                }
+            }
+            return .success(())
+        }
+    }
+
     // MARK: - Convenience
     public func usingWorktree() -> Result<Bool, NSError> {
         return self.bool(for: "extensions.worktreeConfig").map { $0 == true }
@@ -187,5 +212,24 @@ public class Config {
 
     public func useWorktree() -> Result<(), NSError> {
         return self.set(bool: true, for: "extensions.worktreeConfig")
+    }
+
+    public func insteadOf(originURL: String, direction: Remote.Direction) -> Result<String, NSError> {
+        let regexPrefix = "url"
+        let regexSuffix = "\(direction == .Push ? "push" : "")insteadof"
+        let regex = "\(regexPrefix)\\..*\\.\(regexSuffix)"
+        var value = originURL
+        return each(regex: regex) { entry in
+            let prefix = String(cString: entry.value)
+            if originURL.hasPrefix(prefix) {
+                let name = String(cString: entry.name)
+                let newPrefix = name.dropFirst(regexPrefix.count + 1).dropLast(regexSuffix.count + 1)
+                value.replaceSubrange(Range(NSMakeRange(0, prefix.count), in: value)!, with: newPrefix)
+                return true
+            }
+            return false
+        }.map {
+            return value
+        }
     }
 }
