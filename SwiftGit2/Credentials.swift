@@ -85,17 +85,18 @@ internal func credentialsCallback(
         return -1
     }
 
-    var credentials = remoteCallback.avaliableCredentials.removeFirst()
-    if (credentials == .default) && name == "git" {
-        // SSH protocol use sshAgent
-        credentials = .sshAgent
+    var credentials: Credentials?
+    while !remoteCallback.avaliableCredentials.isEmpty {
+        let cred = remoteCallback.avaliableCredentials.removeFirst()
+        if cred.allowed(by: allowTypes) {
+            credentials = cred
+            break
+        }
     }
 
-    if !credentials.allowed(by: allowTypes) {
-        return -1
-    }
+    if credentials == nil { return -1 }
 
-    switch credentials {
+    switch credentials! {
     case .default:
         result = git_credential_default_new(cred)
     case .username(let username):

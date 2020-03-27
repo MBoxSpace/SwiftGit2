@@ -27,6 +27,7 @@ cmake -DBUILD_SHARED_LIBS:BOOL=ON \
     -DLIBSSH2_INCLUDE_DIRS:PATH=$(pwd)/External/libssh2/include \
     -DBUILD_CLAR:BOOL=OFF \
     -DTHREADSAFE:BOOL=ON \
+    -DUSE_GSSAPI:BOOL=ON \
     ..
 cmake --build .
 
