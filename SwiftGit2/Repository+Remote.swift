@@ -210,25 +210,16 @@ extension Repository {
         }
     }
 
-    public class func remoteBranches(at url: URL, callback: RemoteCallback? = nil) -> Result<[String], NSError> {
-        let prefix = String.branchPrefix
-        return lsRemote(at: url, callback: callback).flatMap {
+    public class func lsRemote(at url: URL, showBranch: Bool, showTag: Bool, callback: RemoteCallback? = nil) -> Result<[String], NSError> {
+        return self.lsRemote(at: url, callback: callback).flatMap {
             .success($0.compactMap {
-                $0.starts(with: prefix) ? String($0.dropFirst(prefix.count)) : nil
-            })
-        }
-    }
-
-    public class func remoteTags(at url: URL, callback: RemoteCallback? = nil) -> Result<[String], NSError> {
-        let prefix = String.tagPrefix
-        let subffix = "^{}"
-        return lsRemote(at: url, callback: callback).flatMap {
-            .success($0.compactMap {
-                if $0.hasPrefix(prefix) && !$0.hasSuffix(subffix) {
-                    return String($0.dropFirst(prefix.count))
-                } else {
-                    return nil
+                if showBranch && $0.starts(with: String.branchPrefix) {
+                    return String($0.dropFirst(String.branchPrefix.count))
                 }
+                if showTag && $0.hasPrefix(String.tagPrefix) && !$0.hasSuffix("^{}") {
+                    return String($0.dropFirst(String.tagPrefix.count))
+                }
+                return nil
             })
         }
     }
