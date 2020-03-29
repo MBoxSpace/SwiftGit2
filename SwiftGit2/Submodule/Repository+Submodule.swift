@@ -35,16 +35,21 @@ extension Repository {
         return NSError(gitError: result, pointOfFailure: "git_submodule_foreach")
     }
 
-    @discardableResult
-    public func eachRepository(_ block: @escaping (Repository) -> Bool) -> Bool {
-        if !block(self) { return false }
+    private func eachRepository(name: String, block: @escaping (String, Repository) -> Bool) -> Bool {
+        if !block(name, self) { return false }
+        let name = name.isEmpty ? name : name + "/"
         eachSubmodule { (submodule) -> Int32 in
             if let repo = submodule.repository {
-                if !repo.eachRepository(block) { return GIT_ERROR.rawValue }
+                if !repo.eachRepository(name: "\(name)\(submodule.name)", block: block) { return GIT_ERROR.rawValue }
             }
             return GIT_OK.rawValue
         }
         return true
+    }
+
+    @discardableResult
+    public func eachRepository(_ block: @escaping (String, Repository) -> Bool) -> Bool {
+        return eachRepository(name: "", block: block)
     }
 
     func submodules() -> [Submodule] {
