@@ -204,4 +204,10 @@ public extension Repository {
             return .failure(NSError(gitError: result, pointOfFailure: "git_graph_descendant_of"))
         }
     }
+
+    func isDescendant(of oid: OID) -> Result<Bool, NSError> {
+        return self.HEAD().flatMap {
+            self.isDescendant(of: oid, for: $0.oid)
+        }
+    }
 }
