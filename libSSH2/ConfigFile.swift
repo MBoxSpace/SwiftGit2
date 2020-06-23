@@ -10,19 +10,42 @@ import Foundation
 
 extension SSH2 {
     public class ConfigFile {
-        public var configs: [Config]
-
-        init(configs: [Config]) {
-            self.configs = configs
+        public struct Path {
+            public static let System = "/etc/ssh/ssh_config"
+            public static let User = "~/.ssh/config"
         }
 
-        public func config(for host: String) -> Config? {
-            return self.configs.first { $0.match(host: host) }
+        public let filePath: String?
+        public var items: [Any]
+
+        init(filePath: String, items: [Any]) {
+            self.filePath = filePath
+            self.items = items
         }
 
-        public class func parse(_ path: String) -> ConfigFile? {
+        public var includes: [String] {
+            return items.compactMap { ($0 as? ConfigFile)?.filePath }
+        }
+        public var configs: [Config] {
+            var values = [Config]()
+            for item in items {
+                if let i = item as? ConfigFile {
+                    values.append(contentsOf: i.configs)
+                } else if let i = item as? Config {
+                    values.append(i)
+                }
+            }
+            return values
+        }
+
+        public func config(for host: String) -> [Config] {
+            return self.configs.filter { $0.match(host: host) }
+        }
+
+        public class func parse(_ filepath: String) -> ConfigFile? {
+            let path = (filepath as NSString).expandingTildeInPath
             guard let content = try? String(contentsOfFile: path) else { return nil }
-            var configs = [Config]()
+            var items = [Any]()
             for line in content.split(separator: "\n") {
                 let line = line.trimmingCharacters(in: .whitespaces)
                 if line.isEmpty || line.starts(with: "#") {
@@ -31,13 +54,20 @@ extension SSH2 {
                 var values = line.split(separator: "=").flatMap { $0.split(separator: " ") }.flatMap { $0.split(separator: ",") }.map { String($0) }
                 if values.count < 2 { continue }
                 let key = values.removeFirst().lowercased()
-                if key == "host" {
-                    configs.append(Config(hosts: values))
+                if key == "include" {
+                    let path = values.joined(separator: " ")
+                    if let configFile = ConfigFile.parse(path) {
+                        items.append(configFile)
+                    }
+                } else if key == "host" {
+                    items.append(Config(hosts: values))
                 } else {
-                    configs.last?.setup(key: key, values: values)
+                    if let config = items.last as? Config {
+                        config.setup(key: key, values: values)
+                    }
                 }
             }
-            let configFile = ConfigFile(configs: configs)
+            let configFile = ConfigFile(filePath: filepath, items: items)
             return configFile
         }
     }

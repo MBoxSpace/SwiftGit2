@@ -200,7 +200,7 @@ public class RemoteCallback {
 
         self.url = GitURL(url)
         if userSSHConfigFile == nil {
-            let configPath = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".ssh/config").path
+            let configPath = SSH2.ConfigFile.Path.User
             if FileManager.default.fileExists(atPath: configPath) {
                 userSSHConfigFile = SSH2.ConfigFile.parse(configPath)
             }
@@ -208,10 +208,11 @@ public class RemoteCallback {
         if let host = self.url?.host,
             self.url?.scheme == "ssh",
             let user = self.url?.user {
-            if let configFile = userSSHConfigFile,
-                let config = configFile.config(for: host) {
-                for file in config.identityFiles ?? [] {
-                    self.credentials.append(.sshFile(username: user, publicKeyPath: file + ".pub", privateKeyPath: file, passphrase: ""))
+            if let configFile = userSSHConfigFile {
+                for config in configFile.config(for: host) {
+                    for file in config.identityFiles ?? [] {
+                        self.credentials.append(.sshFile(username: user, publicKeyPath: file + ".pub", privateKeyPath: file, passphrase: ""))
+                    }
                 }
             }
             let defaultIDs = ["id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", "id_xmss"].flatMap { [$0, $0 + "-cert"] }
