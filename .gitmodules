@@ -1,6 +1,6 @@
 [submodule "External/libgit2"]
 	path = External/libgit2
-	url = https://github.com/libgit2/libgit2.git
+url=git@github.com:Whirlwind/libgit2.git
 [submodule "External/libssh2"]
 	path = External/libssh2
 	url = https://github.com/libssh2/libssh2.git
