@@ -22,7 +22,7 @@ public extension Repository {
 
         let strarray = pointer.pointee
         let references = strarray.filter { $0.hasPrefix(prefix) }.map { self.reference(named: $0) }
-        git_strarray_free(pointer)
+        git_strarray_dispose(pointer)
         pointer.deallocate()
 
         return references.aggregateResult()

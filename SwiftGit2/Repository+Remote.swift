@@ -30,7 +30,7 @@ extension Repository {
         let remotes: [Result<Remote, NSError>] = strarray.map {
             return self.remote(named: $0)
         }
-        git_strarray_free(pointer)
+        git_strarray_dispose(pointer)
 
         return remotes.aggregateResult()
     }

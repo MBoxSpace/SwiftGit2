@@ -59,7 +59,7 @@ public extension Repository {
     func pruneWorkTrees() -> Result<[String], NSError> {
         let pointer = UnsafeMutablePointer<git_strarray>.allocate(capacity: 1)
         defer {
-            git_strarray_free(pointer)
+            git_strarray_dispose(pointer)
             pointer.deallocate()
         }
 
@@ -87,7 +87,7 @@ public extension Repository {
     func addWorkTree(name: String, path: String) -> Result<(), NSError> {
         let options = UnsafeMutablePointer<git_worktree_add_options>.allocate(capacity: 1)
         defer { options.deallocate() }
-        var result = git_worktree_add_init_options(options, UInt32(GIT_WORKTREE_ADD_OPTIONS_VERSION))
+        var result = git_worktree_add_options_init(options, UInt32(GIT_WORKTREE_ADD_OPTIONS_VERSION))
         guard result == GIT_OK.rawValue else {
             return .failure(NSError(gitError: result, pointOfFailure: "git_worktree_add_init_options"))
         }

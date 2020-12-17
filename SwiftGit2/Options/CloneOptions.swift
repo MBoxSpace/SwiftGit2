@@ -31,7 +31,7 @@ public class CloneOptions {
 
     func toGitOptions() -> git_clone_options {
         let pointer = UnsafeMutablePointer<git_clone_options>.allocate(capacity: 1)
-        git_clone_init_options(pointer, UInt32(GIT_CLONE_OPTIONS_VERSION))
+        git_clone_options_init(pointer, UInt32(GIT_CLONE_OPTIONS_VERSION))
 
         var options = pointer.move()
 

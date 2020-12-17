@@ -240,7 +240,7 @@ public final class Repository {
 
         // Do this because GIT_STATUS_OPTIONS_INIT is unavailable in swift
         let pointer = UnsafeMutablePointer<git_status_options>.allocate(capacity: 1)
-        let optionsResult = git_status_init_options(pointer, UInt32(GIT_STATUS_OPTIONS_VERSION))
+        let optionsResult = git_status_options_init(pointer, UInt32(GIT_STATUS_OPTIONS_VERSION))
         guard optionsResult == GIT_OK.rawValue else {
             return .failure(NSError(gitError: optionsResult, pointOfFailure: "git_status_init_options"))
         }

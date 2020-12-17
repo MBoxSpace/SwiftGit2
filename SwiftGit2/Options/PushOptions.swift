@@ -26,7 +26,7 @@ public class PushOptions: NSObject {
 
     func toGit() -> git_push_options {
         let pointer = UnsafeMutablePointer<git_push_options>.allocate(capacity: 1)
-        git_push_init_options(pointer, UInt32(GIT_PUSH_OPTIONS_VERSION))
+        git_push_options_init(pointer, UInt32(GIT_PUSH_OPTIONS_VERSION))
 
         var options = pointer.move()
 

@@ -95,7 +95,7 @@ public extension Repository {
     func apply(stash: Int, index: Bool = false) -> Result<(), NSError> {
         // Do this because GIT_STASH_APPLY_OPTIONS_INIT is unavailable in swift
         let applyOptionsPointer = UnsafeMutablePointer<git_stash_apply_options>.allocate(capacity: 1)
-        git_stash_apply_init_options(applyOptionsPointer, UInt32(GIT_STASH_APPLY_OPTIONS_VERSION))
+        git_stash_apply_options_init(applyOptionsPointer, UInt32(GIT_STASH_APPLY_OPTIONS_VERSION))
         var applyOptions = applyOptionsPointer.move()
         applyOptionsPointer.deallocate()
 
@@ -111,7 +111,7 @@ public extension Repository {
     func pop(stash: Int, index: Bool = false) -> Result<(), NSError> {
         // Do this because GIT_STASH_APPLY_OPTIONS_INIT is unavailable in swift
         let applyOptionsPointer = UnsafeMutablePointer<git_stash_apply_options>.allocate(capacity: 1)
-        git_stash_apply_init_options(applyOptionsPointer, UInt32(GIT_STASH_APPLY_OPTIONS_VERSION))
+        git_stash_apply_options_init(applyOptionsPointer, UInt32(GIT_STASH_APPLY_OPTIONS_VERSION))
         var applyOptions = applyOptionsPointer.move()
         applyOptionsPointer.deallocate()
 

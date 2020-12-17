@@ -79,7 +79,7 @@ public class CheckoutOptions {
     internal func toGit() -> git_checkout_options {
         // Do this because GIT_CHECKOUT_OPTIONS_INIT is unavailable in swift
         let pointer = UnsafeMutablePointer<git_checkout_options>.allocate(capacity: 1)
-        git_checkout_init_options(pointer, UInt32(GIT_CHECKOUT_OPTIONS_VERSION))
+        git_checkout_options_init(pointer, UInt32(GIT_CHECKOUT_OPTIONS_VERSION))
         var options = pointer.move()
         pointer.deallocate()
 

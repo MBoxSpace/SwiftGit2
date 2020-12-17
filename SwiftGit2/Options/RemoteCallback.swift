@@ -29,7 +29,7 @@ private func sidebandTransportCallback(str: UnsafePointer<Int8>?, len: Int32, pa
     return 0
 }
 
-private func transferProgressCallback(stats: UnsafePointer<git_transfer_progress>?, payload: UnsafeMutableRawPointer?) -> Int32 {
+private func transferProgressCallback(stats: UnsafePointer<git_indexer_progress>?, payload: UnsafeMutableRawPointer?) -> Int32 {
     if let payload = payload, let progress = stats?.pointee {
         let callback = RemoteCallback.fromPointer(payload)
 

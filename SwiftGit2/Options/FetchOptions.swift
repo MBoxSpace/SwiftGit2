@@ -32,7 +32,7 @@ public class FetchOptions {
 
     func toGit() -> git_fetch_options {
         let pointer = UnsafeMutablePointer<git_fetch_options>.allocate(capacity: 1)
-        git_fetch_init_options(pointer, UInt32(GIT_FETCH_OPTIONS_VERSION))
+        git_fetch_options_init(pointer, UInt32(GIT_FETCH_OPTIONS_VERSION))
 
         var options = pointer.move()
 

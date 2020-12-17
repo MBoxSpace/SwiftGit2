@@ -18,7 +18,7 @@ public extension Repository {
                          signature: UnsafeMutablePointer<git_signature>? = nil) -> Result<git_oid, NSError> {
         var msgBuf = git_buf()
         git_message_prettify(&msgBuf, message, 0, /* ascii for # */ 35)
-        defer { git_buf_free(&msgBuf) }
+        defer { git_buf_dispose(&msgBuf) }
 
         let parentsContiguous = ContiguousArray(parentCommits)
         return parentsContiguous.withUnsafeBufferPointer { unsafeBuffer in

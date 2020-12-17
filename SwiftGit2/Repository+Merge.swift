@@ -90,14 +90,14 @@ public extension Repository {
 
         // Do a merge
         var mergeOptions = git_merge_options()
-        result = git_merge_init_options(&mergeOptions, UInt32(GIT_MERGE_OPTIONS_VERSION))
+        result = git_merge_options_init(&mergeOptions, UInt32(GIT_MERGE_OPTIONS_VERSION))
         guard result == GIT_OK.rawValue else {
             return .failure(NSError(gitError: result,
                                     pointOfFailure: "git_merge_init_options"))
         }
 
         var checkoutOptions = git_checkout_options()
-        result = git_checkout_init_options(&checkoutOptions, UInt32(GIT_CHECKOUT_OPTIONS_VERSION))
+        result = git_checkout_options_init(&checkoutOptions, UInt32(GIT_CHECKOUT_OPTIONS_VERSION))
         guard result == GIT_OK.rawValue else {
             return .failure(NSError(gitError: result,
                                     pointOfFailure: "git_checkout_init_options"))

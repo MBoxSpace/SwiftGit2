@@ -47,7 +47,7 @@ public struct OID {
 
     public var isZero: Bool {
         var oid = self.oid
-        return git_oid_iszero(&oid) == 1
+        return git_oid_is_zero(&oid) == 1
     }
 }
 

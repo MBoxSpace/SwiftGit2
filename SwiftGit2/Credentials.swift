@@ -7,7 +7,6 @@
 //
 
 import git2
-import git2.cred_helpers
 
 private class Wrapper<T> {
     let value: T
@@ -69,7 +68,7 @@ public enum Credentials: Equatable {
 /// Converts the result to the correct error code required by libgit2 (0 = success, 1 = rejected setting creds,
 /// -1 = error)
 internal func credentialsCallback(
-    cred: UnsafeMutablePointer<UnsafeMutablePointer<git_credential>?>?,
+    cred: UnsafeMutablePointer<OpaquePointer?>?,
     url: UnsafePointer<CChar>?,
     username: UnsafePointer<CChar>?,
     allowTypes: UInt32,
