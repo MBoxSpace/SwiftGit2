@@ -1,0 +1,2 @@
+*.dylib filter=lfs diff=lfs merge=lfs -text
+External/output/libgit2/git2.framework/git2 filter=lfs diff=lfs merge=lfs -text

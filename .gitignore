@@ -43,3 +43,5 @@ fastlane/test_output
 test_output
 *.dylib
 git2.framework/git2
+External/output/openssl
+External/output/libssh2

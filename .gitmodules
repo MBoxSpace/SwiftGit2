@@ -7,6 +7,3 @@ url=git@github.com:Whirlwind/libgit2.git
 [submodule "External/openssl"]
 	path = External/openssl
 	url = https://github.com/openssl/openssl.git
-[submodule "External/xcconfigs"]
-	path = External/xcconfigs
-	url = https://github.com/jspahrsummers/xcconfigs.git

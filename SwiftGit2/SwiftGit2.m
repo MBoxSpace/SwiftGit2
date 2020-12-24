@@ -7,7 +7,7 @@
 //
 
 #import "SwiftGit2.h"
-#import "git2.h"
+@import git2;
 
 __attribute__((constructor))
 static void SwiftGit2Init(void) {
