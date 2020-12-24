@@ -1,6 +1,7 @@
 Pod::Spec.new do |spec|
   spec.name         = "SwiftGit2-MBox"
-  spec.version      = "1.0.0"
+  spec.module_name  = "SwiftGit2"
+  spec.version      = "1.0.1"
   spec.summary      = "SwiftGit2 for MBox."
   spec.description  = <<-DESC
   A fork from SwiftGit2 and develop for MBox
