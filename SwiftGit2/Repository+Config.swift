@@ -2,7 +2,7 @@
 //  Repository+Config.swift
 //  SwiftGit2-OSX
 //
-//  Created by 詹迟晶 on 2019/11/28.
+//  Created by Whirlwind on 2019/11/28.
 //  Copyright © 2019 GitHub, Inc. All rights reserved.
 //
 

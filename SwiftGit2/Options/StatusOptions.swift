@@ -2,7 +2,7 @@
 //  StatusOptions.swift
 //  SwiftGit2-OSX
 //
-//  Created by 詹迟晶 on 2020/3/9.
+//  Created by Whirlwind on 2020/3/9.
 //  Copyright © 2020 GitHub, Inc. All rights reserved.
 //
 
