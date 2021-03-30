@@ -60,9 +60,6 @@ public final class Repository {
     public init(_ pointer: OpaquePointer, submodule: Submodule? = nil) {
         self.pointer = pointer
         self.submodule = submodule
-
-        let path = git_repository_workdir(pointer)
-        self.directoryURL = path.map({ URL(fileURLWithPath: String(validatingUTF8: $0)!, isDirectory: true) })
     }
 
     deinit {
@@ -74,20 +71,35 @@ public final class Repository {
     /// The underlying libgit2 `git_repository` object.
     public let pointer: OpaquePointer
 
+    /**
+     * Get the path of this repository
+     *
+     * This is the path of the `.git` folder for normal repositories,
+     * or of the repository itself for bare repositories.
+     */
+    public lazy var gitDir: URL? = {
+        let path = git_repository_path(pointer)
+        return path.map { URL(fileURLWithPath: String(validatingUTF8: $0)!, isDirectory: true) }
+    }()
+
     /// The URL of the repository's working directory, or `nil` if the
     /// repository is bare.
-    public let directoryURL: URL?
+    public lazy var workDir: URL? = {
+        let path = git_repository_workdir(pointer)
+        return path.map { URL(fileURLWithPath: String(validatingUTF8: $0)!, isDirectory: true) }
+    }()
 
     /**
-     * Get the path of the working directory for this repository
+     * Get the path of the shared common directory for this repository.
      *
-     * If the repository is bare, this function will always return NULL.
-     * If the repository is worktree, this function will return the origin repository path.
-     *
-     **/
-    public var originPath: String {
-        return String(cString: git_repository_workdir(self.pointer))
-    }
+     * If the repository is bare, it is the root directory for the repository.
+     * If the repository is a worktree, it is the parent repo's gitdir.
+     * Otherwise, it is the gitdir.
+     */
+    public lazy var commonDir: URL? = {
+        let path = git_repository_commondir(pointer)
+        return path.map { URL(fileURLWithPath: String(validatingUTF8: $0)!, isDirectory: true) }
+    }()
 
     public var submodule: Submodule?
 

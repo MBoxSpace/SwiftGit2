@@ -25,7 +25,7 @@ public extension Repository {
                     if let block = shouldRemove, !block(path) {
                         continue
                     }
-                    guard let url = directoryURL?.appendingPathComponent(path) else { continue }
+                    guard let url = workDir?.appendingPathComponent(path) else { continue }
                     try? FileManager.default.removeItem(at: url)
                 }
             }
