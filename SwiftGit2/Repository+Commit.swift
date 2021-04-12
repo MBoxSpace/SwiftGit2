@@ -75,28 +75,40 @@ public extension Repository {
     internal func commit(message: String,
                          signature: UnsafeMutablePointer<git_signature>? = nil
         ) -> Result<git_oid, NSError> {
-        // get head reference
-        var head: OpaquePointer? = nil
-        defer { git_reference_free(head) }
-        var result = git_repository_head(&head, self.pointer)
-        guard result == GIT_OK.rawValue else {
-            return Result.failure(NSError(gitError: result, pointOfFailure: "git_repository_head"))
+
+        let unborn: Bool
+        let result = git_repository_head_unborn(self.pointer)
+        if result == 1 {
+            unborn = true
+        } else if result == 0 {
+            unborn = false
+        } else {
+            return .failure(NSError(gitError: result, pointOfFailure: "git_repository_head_unborn"))
         }
 
-        // get head oid
-        var oid = git_reference_target(head).pointee
-
-        // get head commit
         var commit: OpaquePointer? = nil
         defer { git_commit_free(commit) }
-        result = git_commit_lookup(&commit, self.pointer, &oid)
-        guard result == GIT_OK.rawValue else {
-            return Result.failure(NSError(gitError: result, pointOfFailure: "git_commit_lookup"))
-        }
+        if !unborn {
+            // get head reference
+            var head: OpaquePointer? = nil
+            defer { git_reference_free(head) }
+            var result = git_repository_head(&head, self.pointer)
+            guard result == GIT_OK.rawValue else {
+                return Result.failure(NSError(gitError: result, pointOfFailure: "git_repository_head"))
+            }
 
+            // get head oid
+            var oid = git_reference_target(head).pointee
+
+            // get head commit
+            result = git_commit_lookup(&commit, self.pointer, &oid)
+            guard result == GIT_OK.rawValue else {
+                return Result.failure(NSError(gitError: result, pointOfFailure: "git_commit_lookup"))
+            }
+        }
         return unsafeIndex().flatMap { index in
             defer { git_index_free(index) }
-            return self.commit(index: index, parentCommits: [commit], message: message, signature: signature)
+            return self.commit(index: index, parentCommits: [commit].filter { $0 != nil }, message: message, signature: signature)
         }
     }
 
