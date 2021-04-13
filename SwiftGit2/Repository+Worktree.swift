@@ -56,7 +56,7 @@ public extension Repository {
         return .success(nil)
     }
 
-    func pruneWorkTrees() -> Result<[String], NSError> {
+    func pruneWorkTrees(all: Bool = false) -> Result<[String], NSError> {
         let pointer = UnsafeMutablePointer<git_strarray>.allocate(capacity: 1)
         defer {
             git_strarray_dispose(pointer)
@@ -74,7 +74,7 @@ public extension Repository {
         for index in 0..<strarray.count {
             let name = strarray.strings[index]!
             do {
-                if let path = try pruneWorkTree(String(cString: name)).get() {
+                if let path = try pruneWorkTree(String(cString: name), force: all).get() {
                     pruned.append(path)
                 }
             } catch {
