@@ -101,6 +101,18 @@ public final class Repository {
         return path.map { URL(fileURLWithPath: String(validatingUTF8: $0)!, isDirectory: true) }
     }()
 
+    public func path(for item: Item) -> Result<URL, NSError> {
+        var pathBuf = git_buf()
+        let result = git_repository_item_path(&pathBuf, pointer, GIT_REPOSITORY_ITEM_WORKTREES)
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result, pointOfFailure: "git_repository_item_path"))
+        }
+        guard let url = pathBuf.ptr.map({ URL(fileURLWithPath: String(validatingUTF8: $0)!, isDirectory: true) }) else {
+            return .failure(NSError(gitError: result, pointOfFailure: "git_repository_item_path"))
+        }
+        return .success(url)
+    }
+
     public var submodule: Submodule?
 
     // MARK: - Object Lookups
