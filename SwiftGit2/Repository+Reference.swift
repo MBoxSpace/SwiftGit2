@@ -51,7 +51,7 @@ public extension Repository {
     }
 
     internal func reference<T>(named name: String, block: (OpaquePointer) -> Result<T, NSError>) -> Result<T, NSError> {
-        if name.isLongRef || name == "HEAD" {
+        if name.isLongRef || name.isHEAD {
             return self.reference(longName: name) { pointer -> Result<T, NSError> in
                 return block(pointer)
             }

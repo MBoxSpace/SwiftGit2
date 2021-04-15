@@ -84,13 +84,32 @@ public extension Repository {
         return .success(pruned)
     }
 
-    func addWorkTree(name: String, path: String) -> Result<(), NSError> {
+    func addWorkTree(name: String, path: String, head: String? = nil) -> Result<(), NSError> {
         let options = UnsafeMutablePointer<git_worktree_add_options>.allocate(capacity: 1)
         defer { options.deallocate() }
         var result = git_worktree_add_options_init(options, UInt32(GIT_WORKTREE_ADD_OPTIONS_VERSION))
         guard result == GIT_OK.rawValue else {
             return .failure(NSError(gitError: result, pointOfFailure: "git_worktree_add_init_options"))
         }
+
+        var reference: OpaquePointer? = nil
+        defer {
+            git_reference_free(reference)
+        }
+        if let head = head {
+            if head.isLongRef || head.isHEAD {
+                let result = git_reference_lookup(&reference, self.pointer, head)
+                guard result == GIT_OK.rawValue else {
+                    return Result.failure(NSError(gitError: result, pointOfFailure: "git_reference_lookup"))
+                }
+            } else {
+                let result = git_reference_dwim(&reference, self.pointer, head)
+                guard result == GIT_OK.rawValue else {
+                    return Result.failure(NSError(gitError: result, pointOfFailure: "git_reference_dwim"))
+                }
+            }
+        }
+        options.pointee.ref = reference
 
         var worktree: OpaquePointer?
         result = name.withCString { cName -> Int32 in
@@ -101,8 +120,12 @@ public extension Repository {
         guard result == GIT_OK.rawValue else {
             return .failure(NSError(gitError: result, pointOfFailure: "git_worktree_add"))
         }
-        return Repository.at(URL(fileURLWithPath: path)).flatMap { repo -> Result<(), NSError> in
-            repo.HEAD().flatMap { repo.setHEAD($0.oid) }.flatMap { repo.deleteBranch(name) }
+        if head == nil {
+            return Repository.at(URL(fileURLWithPath: path)).flatMap { repo -> Result<(), NSError> in
+                repo.HEAD().flatMap { repo.setHEAD($0.oid) }.flatMap { repo.deleteBranch(name) }
+            }
+        } else {
+            return .success(())
         }
     }
 }

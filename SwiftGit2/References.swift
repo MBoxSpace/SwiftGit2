@@ -37,6 +37,10 @@ extension String {
         return self.hasPrefix(.remotePrefix)
     }
 
+    public var isHEAD: Bool {
+        return self == "HEAD"
+    }
+
     public var shortRef: String {
         if !isLongRef { return self }
         let pieces = self.split(separator: "/")
