@@ -94,7 +94,12 @@ public extension Repository {
 
         var reference: OpaquePointer? = nil
         defer {
-            git_reference_free(reference)
+            if let reference = reference {
+                if head == nil {
+                    git_reference_delete(reference)
+                }
+                git_reference_free(reference)
+            }
         }
         if let head = head {
             if head.isLongRef || head.isHEAD {
@@ -107,6 +112,19 @@ public extension Repository {
                 guard result == GIT_OK.rawValue else {
                     return Result.failure(NSError(gitError: result, pointOfFailure: "git_reference_dwim"))
                 }
+            }
+        } else {
+            var ref: OpaquePointer? = nil
+            defer { git_reference_free(ref) }
+            result = git_repository_head(&ref, self.pointer)
+            guard result == GIT_OK.rawValue else {
+                return Result.failure(NSError(gitError: result, pointOfFailure: "git_repository_head"))
+            }
+            let oid = git_reference_target(ref)
+            let tmpBranch = "refs/heads/SwiftGit2-TMP-\(UUID().uuidString.prefix(6))"
+            result = git_reference_create(&reference, self.pointer, tmpBranch, oid, 0, "SwiftGit2 TMP Branch")
+            guard result == GIT_OK.rawValue else {
+                return Result.failure(NSError(gitError: result, pointOfFailure: "git_reference_create"))
             }
         }
         options.pointee.ref = reference
@@ -122,7 +140,7 @@ public extension Repository {
         }
         if head == nil {
             return Repository.at(URL(fileURLWithPath: path)).flatMap { repo -> Result<(), NSError> in
-                repo.HEAD().flatMap { repo.setHEAD($0.oid) }.flatMap { repo.deleteBranch(name) }
+                repo.HEAD().flatMap { repo.setHEAD($0.oid) }
             }
         } else {
             return .success(())
