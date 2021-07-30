@@ -23,23 +23,36 @@ public struct Remote: Hashable {
     /// This may be an SSH URL, which isn't representable using `NSURL`.
     public let URL: String?
 
+    public let originURL: String?
+
     /// The Push URL of the remote.
     ///
     /// This may be an SSH URL, which isn't representable using `NSURL`.
     public let pushURL: String?
 
+    public let originPushURL: String?
+
     /// Create an instance with a libgit2 `git_remote`.
-    public init(_ pointer: OpaquePointer) {
+    public init(_ pointer: OpaquePointer, originURL: String?, originPushURL: String?) {
         name = String(validatingUTF8: git_remote_name(pointer))!
+
+        let URL: String?
         if let url = git_remote_url(pointer) {
             URL = String(validatingUTF8: url)
         } else {
             URL = nil
         }
+        self.URL = URL
+
+        let pushURL: String?
         if let url = git_remote_pushurl(pointer) {
             pushURL = String(validatingUTF8: url)
         } else {
             pushURL = nil
         }
+        self.pushURL = pushURL
+
+        self.originURL = originURL ?? URL
+        self.originPushURL = originPushURL ?? pushURL
     }
 }

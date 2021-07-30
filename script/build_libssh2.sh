@@ -7,18 +7,18 @@ source "${SCRIPT_DIR}/common.sh"
 
 function build_ssh2 () 
 {
-	ARCH="$1"
-	export CFLAGS="-arch ${ARCH}"
+    ARCH="$1"
+    export CFLAGS="-arch ${ARCH}"
 
-	./buildconf
-	./configure --enable-shared --disable-static\
-		--host=${ARCH}-apple-darwin\
-		--with-libssl-prefix="${OPENSSL_DIR}"\
-		--prefix="${OUTPUT_DIR}"
-	make
-	make install
+    ./buildconf
+    ./configure --enable-shared --disable-static\
+        --host=${ARCH}-apple-darwin\
+        --with-libssl-prefix="${OPENSSL_DIR}"\
+        --prefix="${OUTPUT_DIR}"
+    make
+    make install
 
-	cd "${OUTPUT_DIR}/lib"
+    cd "${OUTPUT_DIR}/lib"
     install_name_tool -id @rpath/libssh2.dylib libssh2.dylib
     rm -rf libssh2.dylib
     cp libssh2.1.dylib libssh2.dylib

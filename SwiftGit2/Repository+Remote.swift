@@ -52,7 +52,14 @@ extension Repository {
     ///
     /// Returns the remote if it exists, or an error.
     public func remote(named name: String) -> Result<Remote, NSError> {
-        return remoteLookup(named: name) { $0.map(Remote.init) }
+        return remoteLookup(named: name) {
+            $0.map { pointer in
+                let name = String(validatingUTF8: git_remote_name(pointer))!
+                let originURL = try? self.config.string(for: "remote.\(name).url").get()
+                let originPushURL = try? self.config.string(for: "remote.\(name).pushurl").get()
+                return Remote(pointer, originURL: originURL, originPushURL: originPushURL)
+            }
+        }
     }
 
     /// Download new data and update tips

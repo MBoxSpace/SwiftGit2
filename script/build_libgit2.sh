@@ -13,9 +13,11 @@ OPENSSL_DIR="${OUTPUT_DIR}/openssl"
 LIBSSH2_DIR="${OUTPUT_DIR}/libssh2"
 LIBGIT2_DIR="${OUTPUT_DIR}/libgit2"
 
-# export PKG_CONFIG_PATH="$LIBSSH2_DIR/lib/pkgconfig:$PKG_CONFIG_PATH"
-
-# libssh2 search path
+export PKG_CONFIG_PATH="$LIBSSH2_DIR/lib/pkgconfig:$OPENSSL_DIR/lib/pkgconfig:$PKG_CONFIG_PATH"
+export PKG_CONFIG_LIBSSH2_PREFIX="$LIBSSH2_DIR"
+export PKG_CONFIG_OPENSSL_PREFIX="$OPENSSL_DIR"
+export PKG_CONFIG_LIBSSL_PREFIX="$OPENSSL_DIR"
+export PKG_CONFIG_LIBCRYPTO_PREFIX="$OPENSSL_DIR"
 export PATH="${LIBSSH2_DIR}/lib:${PATH}"
 
 product="git2.framework/git2"
@@ -34,12 +36,10 @@ cd build
 function build_git2() {
 	ARCH=$1
 	cmake -DBUILD_SHARED_LIBS:BOOL=ON \
-	    -DLIBSSH2_INCLUDE_DIRS:PATH="${LIBSSH2_DIR}/include" \
 	    -DBUILD_CLAR:BOOL=OFF \
 	    -DTHREADSAFE:BOOL=ON \
 	    -DUSE_GSSAPI:BOOL=ON \
         -DCMAKE_OSX_ARCHITECTURES:STRING="${ARCH}" \
-        -DCMAKE_PREFIX_PATH:PATH="${OPENSSL_DIR}" \
 	    ..
 	cmake --build .
 }
