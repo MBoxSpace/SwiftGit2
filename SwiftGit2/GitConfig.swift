@@ -132,6 +132,16 @@ public class Config {
         return .success(Config(config!))
     }
 
+    public func delete(keyPath: String) -> Result<(), NSError> {
+        let result = keyPath.withCString { git_config_delete_entry(self.config, $0) }
+        switch result {
+        case GIT_ENOTFOUND.rawValue, GIT_OK.rawValue:
+            return .success(())
+        default:
+            return .failure(NSError(gitError: result, pointOfFailure: "git_config_delete_entry"))
+        }
+    }
+
     public func string(for keyPath: String) -> Result<String?, NSError> {
         var value: UnsafePointer<Int8>?
         let result = keyPath.withCString { git_config_get_string(&value, snapshot, $0) }
