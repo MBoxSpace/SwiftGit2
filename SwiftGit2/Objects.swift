@@ -76,12 +76,15 @@ public struct Signature {
     public static func `default`(_ repository: Repository) -> Result<Signature, NSError> {
         var signature: UnsafeMutablePointer<git_signature>? = nil
         let signatureResult = git_signature_default(&signature, repository.pointer)
-        guard signatureResult == GIT_OK.rawValue, let signatureUnwrap = signature else {
+        if signatureResult == GIT_OK.rawValue, let signatureUnwrap = signature {
+            let s = signatureUnwrap.move()
+            return .success(Signature(s))
+        }
+        guard signatureResult == GIT_ENOTFOUND.rawValue else {
             let err = NSError(gitError: signatureResult, pointOfFailure: "git_signature_default")
             return .failure(err)
         }
-        let s = signatureUnwrap.move()
-        return .success(Signature(s))
+        return .success(Signature(name: NSUserName(), email: "\(NSUserName())@\(ProcessInfo.processInfo.hostName)"))
     }
 }
 
