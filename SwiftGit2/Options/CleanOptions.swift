@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import git2
+@_implementationOnly import git2
 
 public struct CleanOptions: OptionSet {
     public let rawValue: Int

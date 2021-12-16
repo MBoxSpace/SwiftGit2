@@ -4,7 +4,7 @@
 //
 
 import Foundation
-import git2
+@_implementationOnly import git2
 
 public class CommitIterator: IteratorProtocol, Sequence {
     public typealias Iterator = CommitIterator

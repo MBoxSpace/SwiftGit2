@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 GitHub, Inc. All rights reserved.
 //
 
-import git2
+@_implementationOnly import git2
 
 /// A pointer to a git object.
 public protocol PointerType: Hashable {
@@ -14,7 +14,7 @@ public protocol PointerType: Hashable {
     var oid: OID { get }
 
     /// The libgit2 `git_object_t` of the referenced object.
-    var type: git_object_t { get }
+    var type: GitObjectType { get }
 }
 
 public extension PointerType {
@@ -48,16 +48,16 @@ public enum Pointer: PointerType {
         }
     }
 
-    public var type: git_object_t {
+    public var type: GitObjectType {
         switch self {
         case .commit:
-            return GIT_OBJECT_COMMIT
+            return .commit
         case .tree:
-            return GIT_OBJECT_TREE
+            return .tree
         case .blob:
-            return GIT_OBJECT_BLOB
+            return .blob
         case .tag:
-            return GIT_OBJECT_TAG
+            return .tag
         }
     }
 
@@ -96,7 +96,7 @@ extension Pointer: CustomStringConvertible {
 public struct PointerTo<T: ObjectType>: PointerType {
     public let oid: OID
 
-    public var type: git_object_t {
+    public var type: GitObjectType {
         return T.type
     }
 

@@ -6,7 +6,7 @@
 //  Copyright (c) 2015 GitHub, Inc. All rights reserved.
 //
 
-import git2
+@_implementationOnly import git2
 
 extension git_strarray {
     func filter(_ isIncluded: (String) -> Bool) -> [String] {

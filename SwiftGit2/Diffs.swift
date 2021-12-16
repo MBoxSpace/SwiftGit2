@@ -6,7 +6,7 @@
 //  Copyright © 2017 GitHub, Inc. All rights reserved.
 //
 
-import git2
+@_implementationOnly import git2
 
 public struct StatusEntry {
     public var status: Diff.Status
@@ -45,7 +45,7 @@ public struct Diff {
             case unreadable     = 9     /**< entry is unreadable */
             case conflicted     = 10    /**< entry in the index is conflicted */
         }
-        public static let type = GIT_OBJECT_REF_DELTA
+        static let type = GIT_OBJECT_REF_DELTA
 
         public var status: Status
         public var statusName: String
@@ -53,7 +53,7 @@ public struct Diff {
         public var oldFile: File?
         public var newFile: File?
 
-        public init(_ delta: git_diff_delta) {
+        init(_ delta: git_diff_delta) {
             self.status = Status(rawValue: delta.status.rawValue)!
             self.statusName = String(UnicodeScalar(UInt8(git_diff_status_char(delta.status))))
             self.flags = Flags(rawValue: delta.flags)
@@ -69,7 +69,7 @@ public struct Diff {
         public var flags: Flags
         public var mode: UInt32
 
-        public init(_ diffFile: git_diff_file) {
+        init(_ diffFile: git_diff_file) {
             self.oid = OID(diffFile.id)
             let path = diffFile.path
             self.path = path.map(String.init(cString:))!

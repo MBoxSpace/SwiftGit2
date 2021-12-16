@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import git2
+@_implementationOnly import git2
 
 public extension Repository {
     func clean(_ options: CleanOptions, shouldRemove: ((String) -> Bool)? = nil) -> Result<[String], NSError> {

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import git2
+@_implementationOnly import git2
 
 /// Helper function used as the libgit2 progress callback in git_checkout_options.
 /// This is a function with a type signature of git_checkout_progress_cb.
@@ -46,7 +46,7 @@ public class CheckoutOptions {
             self.value = value
         }
 
-        public init(_ strategy: git_checkout_strategy_t) {
+        internal init(_ strategy: git_checkout_strategy_t) {
             self.value = UInt(strategy.rawValue)
         }
 
@@ -60,7 +60,7 @@ public class CheckoutOptions {
             return value
         }
 
-        public var gitCheckoutStrategy: git_checkout_strategy_t {
+        internal var gitCheckoutStrategy: git_checkout_strategy_t {
             return git_checkout_strategy_t(UInt32(self.value))
         }
     }

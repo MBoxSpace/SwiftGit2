@@ -7,11 +7,26 @@
 //
 
 import Foundation
-import git2
+@_implementationOnly import git2
+
+public enum GitObjectType: Int32 {
+    case any         = -2 /**< GIT_OBJECT_ANY, Object can be any of the following */
+    case invalid     = -1 /**< GIT_OBJECT_INVALID, Object is invalid. */
+    case commit      = 1 /**< GIT_OBJECT_COMMIT, A commit object. */
+    case tree        = 2 /**< GIT_OBJECT_TREE, A tree (directory listing) object. */
+    case blob        = 3 /**< GIT_OBJECT_BLOB, A file revision object. */
+    case tag         = 4 /**< GIT_OBJECT_TAG, An annotated tag object. */
+    case offsetDelta = 6 /**< GIT_OBJECT_OFS_DELTA, A delta, base is given by an offset. */
+    case refDelta    = 7 /**< GIT_OBJECT_REF_DELTA, A delta, base is given by object id. */
+
+    var git_type: git_object_t {
+        return git_object_t(rawValue: self.rawValue)
+    }
+}
 
 /// A git object.
 public protocol ObjectType {
-    static var type: git_object_t { get }
+    static var type: GitObjectType { get }
 
     /// The OID of the object.
     var oid: OID { get }
@@ -52,7 +67,7 @@ public struct Signature {
     }
 
     /// Create an instance with a libgit2 `git_signature`.
-    public init(_ signature: git_signature) {
+    init(_ signature: git_signature) {
         name = String(validatingUTF8: signature.name)!
         email = String(validatingUTF8: signature.email)!
         time = Date(timeIntervalSince1970: TimeInterval(signature.when.time))
@@ -98,7 +113,7 @@ extension Signature: Hashable {
 
 /// A git commit.
 public struct Commit: ObjectType, Hashable, CustomStringConvertible {
-    public static let type = GIT_OBJECT_COMMIT
+    public static let type = GitObjectType.commit
 
     /// The OID of the commit.
     public let oid: OID
@@ -146,7 +161,7 @@ public struct Commit: ObjectType, Hashable, CustomStringConvertible {
 
 /// A git tree.
 public struct Tree: ObjectType, Hashable {
-    public static let type = GIT_OBJECT_TREE
+    public static let type = GitObjectType.tree
 
     /// An entry in a `Tree`.
     public struct Entry: Hashable {
@@ -202,7 +217,7 @@ extension Tree.Entry: CustomStringConvertible {
 
 /// A git blob.
 public struct Blob: ObjectType, Hashable {
-    public static let type = GIT_OBJECT_BLOB
+    public static let type = GitObjectType.blob
 
     /// The OID of the blob.
     public let oid: OID
@@ -221,7 +236,7 @@ public struct Blob: ObjectType, Hashable {
 
 /// An annotated git tag.
 public struct Tag: ObjectType, Hashable {
-    public static let type = GIT_OBJECT_TAG
+    public static let type = GitObjectType.tag
 
     /// The OID of the tag.
     public let oid: OID

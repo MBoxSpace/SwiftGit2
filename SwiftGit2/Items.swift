@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import git2
+@_implementationOnly import git2
 
 extension Repository {
     public enum Item {

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import git2
+@_implementationOnly import git2
 
 public extension Repository {
     /// Load all the references with the given prefix (e.g. "refs/heads/")

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import git2
+@_implementationOnly import git2
 
 public enum FileMode: UInt32 {
     case unreadable = 0000000

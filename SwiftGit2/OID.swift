@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 GitHub, Inc. All rights reserved.
 //
 
-import git2
+@_implementationOnly import git2
 
 /// An identifier for a Git object.
 public struct OID {
@@ -38,7 +38,7 @@ public struct OID {
 
     // MARK: - Properties
 
-    public let oid: git_oid
+    let oid: git_oid
     public let length: size_t
 
     public var isShort: Bool {

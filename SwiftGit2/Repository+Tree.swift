@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import git2
+@_implementationOnly import git2
 
 public extension Repository {
     func aheadBehind(local: OID, upstream: OID) -> Result<(ahead: size_t, behind: size_t), NSError> {

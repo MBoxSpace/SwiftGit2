@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import git2
+@_implementationOnly import git2
 
 /// A git repository.
 public final class Repository {
@@ -185,7 +185,7 @@ public final class Repository {
     ///
     /// Returns the object if it exists, or an error.
     public func object<T>(from pointer: PointerTo<T>) -> Result<T, NSError> {
-        return withGitObject(pointer.oid, type: pointer.type) { T($0) }
+        return withGitObject(pointer.oid, type: pointer.type.git_type) { T($0) }
     }
 
     /// Loads the referenced object from the pointer.
@@ -213,13 +213,13 @@ public final class Repository {
     /// Returns the object if it exists, or an error.
     func object(from object: OpaquePointer) -> Result<ObjectType, NSError> {
         let type = git_object_type(object)
-        if type == Blob.type {
+        if type == Blob.type.git_type {
             return .success(Blob(object))
-        } else if type == Commit.type {
+        } else if type == Commit.type.git_type {
             return .success(Commit(object))
-        } else if type == Tag.type {
+        } else if type == Tag.type.git_type {
             return .success(Tag(object))
-        } else if type == Tree.type {
+        } else if type == Tree.type.git_type {
             return .success(Tree(object))
         }
         let error = NSError(domain: "org.libgit2.SwiftGit2",

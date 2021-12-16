@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import git2
+@_implementationOnly import git2
 
 public class Index {
     public struct Entry {
@@ -32,7 +32,7 @@ public class Index {
 
     private var git_index: OpaquePointer
 
-    public init(git_index: OpaquePointer) {
+    init(git_index: OpaquePointer) {
         self.git_index = git_index
     }
 

@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-import git2
+@_implementationOnly import git2
 
 public class PushOptions: NSObject {
     public typealias MessageBlock = RemoteCallback.MessageBlock

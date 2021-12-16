@@ -6,7 +6,7 @@
 //  Copyright © 2020 GitHub, Inc. All rights reserved.
 //
 
-import git2
+@_implementationOnly import git2
 
 extension Submodule {
     struct Status: OptionSet {

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import git2
+@_implementationOnly import git2
 
 public extension Repository {
     /// Load and return a list of all local branches.

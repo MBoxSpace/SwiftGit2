@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-import git2
+@_implementationOnly import git2
 
 /**
  * Type for messages delivered by the transport.  Return a negative value
