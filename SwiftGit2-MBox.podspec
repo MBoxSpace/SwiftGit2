@@ -16,4 +16,5 @@ Pod::Spec.new do |spec|
   spec.source_files  = "libSSH2/*.swift", "SwiftGit2/*.{swift,h,m}", "SwiftGit2/**/*.swift"
   spec.vendored_libraries = "External/output/*/lib/*.dylib"
   spec.vendored_frameworks = "External/output/libgit2/git2.framework"
+  spec.pod_target_xcconfig = { "GCC_PREPROCESSOR_DEFINITIONS" => "GIT_DEPRECATE_HARD=1" }
 end

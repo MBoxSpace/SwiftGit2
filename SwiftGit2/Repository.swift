@@ -322,7 +322,12 @@ public final class Repository {
      * sequences ".." and "@{" which have special meaning to revparse.
      */
     public func checkValid(_ refname: String) -> Bool {
-        return git_reference_is_valid_name(refname) == 1
+        var status: Int32 = 0
+        let result = git_reference_name_is_valid(&status, refname)
+        guard result == GIT_OK.rawValue else {
+            return false
+        }
+        return status == 1
     }
 }
 

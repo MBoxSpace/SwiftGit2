@@ -199,6 +199,7 @@ typedef enum {
 typedef struct git_worktree_prune_options {
 	unsigned int version;
 
+	/** A combination of `git_worktree_prune_t` */
 	uint32_t flags;
 } git_worktree_prune_options;
 
