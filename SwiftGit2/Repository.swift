@@ -103,7 +103,7 @@ public final class Repository {
 
     public func path(for item: Item) -> Result<URL, NSError> {
         var pathBuf = git_buf()
-        let result = git_repository_item_path(&pathBuf, pointer, GIT_REPOSITORY_ITEM_WORKTREES)
+        let result = git_repository_item_path(&pathBuf, pointer, item.toGit())
         guard result == GIT_OK.rawValue else {
             return .failure(NSError(gitError: result, pointOfFailure: "git_repository_item_path"))
         }
