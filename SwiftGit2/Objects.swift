@@ -99,7 +99,9 @@ public struct Signature {
             let err = NSError(gitError: signatureResult, pointOfFailure: "git_signature_default")
             return .failure(err)
         }
-        return .success(Signature(name: NSUserName(), email: "\(NSUserName())@\(ProcessInfo.processInfo.hostName)"))
+        let name = (try? repository.config.string(for: "user.name").get()) ?? NSUserName()
+        let email = (try? repository.config.string(for: "user.email").get()) ?? "\(NSUserName())@\(ProcessInfo.processInfo.hostName)"
+        return .success(Signature(name: name, email: email))
     }
 }
 
