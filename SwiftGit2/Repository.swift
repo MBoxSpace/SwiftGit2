@@ -294,6 +294,20 @@ public final class Repository {
         return .success(returnArray)
     }
 
+    public func status(for path: String) -> Result<Diff.Status?, NSError> {
+        var flags: UInt32 = 0
+        let result = path.withCString { cpath in
+            git_status_file(&flags, self.pointer, cpath)
+        }
+        if result == GIT_ENOTFOUND.rawValue {
+            return .success(nil)
+        }
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result, pointOfFailure: "git_status_file"))
+        }
+        return .success(Diff.Status(rawValue: flags))
+    }
+
     // MARK: - Validity/Existence Check
 
     /// - returns: `.success(true)` iff there is a git repository at `url`,
