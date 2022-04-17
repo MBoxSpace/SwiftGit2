@@ -1,4 +1,4 @@
-prefix=/Users/whirlwind/Documents/Developer/MBoxGUI31/SwiftGit2/External/output/openssl
+prefix=/Users/whirlwind/Documents/Developer/MBoxGUI4/SwiftGit2/External/output/openssl
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
@@ -6,7 +6,7 @@ enginesdir=${libdir}/engines-1.1
 
 Name: OpenSSL-libcrypto
 Description: OpenSSL cryptography library
-Version: 1.1.1i
+Version: 1.1.1n
 Libs: -L${libdir} -lcrypto
 Libs.private:  
 Cflags: -I${includedir}

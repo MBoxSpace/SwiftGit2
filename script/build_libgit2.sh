@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -ex
+set -e
 SCRIPT_DIR=$(realpath "$(dirname "$0")")
 source "${SCRIPT_DIR}/common.sh"
 
@@ -11,6 +11,7 @@ source "${SCRIPT_DIR}/common.sh"
 OUTPUT_DIR="$(pwd)/External/output"
 OPENSSL_DIR="${OUTPUT_DIR}/openssl"
 LIBSSH2_DIR="${OUTPUT_DIR}/libssh2"
+MBEDTLS_DIR="${OUTPUT_DIR}/mbedtls"
 LIBGIT2_DIR="${OUTPUT_DIR}/libgit2"
 LIBGIT2_NAME="libgit2.dylib"
 
@@ -19,24 +20,32 @@ export PKG_CONFIG_LIBSSH2_PREFIX="$LIBSSH2_DIR"
 export PKG_CONFIG_OPENSSL_PREFIX="$OPENSSL_DIR"
 export PKG_CONFIG_LIBSSL_PREFIX="$OPENSSL_DIR"
 export PKG_CONFIG_LIBCRYPTO_PREFIX="$OPENSSL_DIR"
-export PATH="${LIBSSH2_DIR}/lib:${PATH}"
+export PATH="${MBEDTLS_DIR}/lib:${PATH}"
 
-
-cd "External/libgit2"
-git reset HEAD --hard
+cd "External"
+clone_cd git@github.com:libgit2/libgit2.git v1.4.3 libgit2
 
 # Apply Patch
+title "Apply patch for libgit2"
 git apply "${SCRIPT_DIR}/libgit2_patch.diff"
 
 # Copy Headers
-rsync -av --delete --exclude=sys --exclude=.DS_Store include/ "${LIBGIT2_DIR}/git2.framework/Headers/"
+title "Copy framework headers"
+rsync -av \
+    --delete-before \
+    --exclude=sys \
+    --exclude=.DS_Store \
+    --exclude=git2/cred_helpers.h \
+    --exclude=git2/deprecated.h \
+    --exclude=git2/stdint.h \
+    include/ "${LIBGIT2_DIR}/git2.framework/Headers/"
 
 function build_git2() {
     ARCH=$1
+    title "Build for $ARCH"
     cmake -DBUILD_SHARED_LIBS:BOOL=ON \
-        -DBUILD_CLAR:BOOL=OFF \
-        -DTHREADSAFE:BOOL=ON \
         -DUSE_GSSAPI:BOOL=ON \
+        -DUSE_SSH:BOOL=ON \
         -DCMAKE_OSX_ARCHITECTURES:STRING="${ARCH}" \
         ..
     cmake --build .

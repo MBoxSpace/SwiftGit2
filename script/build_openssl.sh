@@ -35,7 +35,8 @@ OUTPUT_DIR=$(pwd)/External/output/openssl
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
-cd External/openssl
+cd External
+clone_cd git@github.com:openssl/openssl.git OpenSSL_1_1_1n openssl
 
 cleanup
 build_ssl arm64

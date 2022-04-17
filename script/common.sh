@@ -3,18 +3,19 @@ export MACOSX_DEPLOYMENT_TARGET=10.15
 
 function cleanup () 
 {
-    echo "Clean..."
+    title "Clean..."
     git clean -fdx
 }
 
 function save_arch() {
+    title "Save $1 arch..."
     target="${OUTPUT_DIR}/lib_$1"
     rm -rf "${target}"
     cp -a "${OUTPUT_DIR}/lib" "${target}"
 }
 
 function fat_binary() {
-    echo "Building fat binary..."
+    title "Building fat binary..."
 
     target="${OUTPUT_DIR}/lib"
 	dir1="${OUTPUT_DIR}/lib_$1"
@@ -30,4 +31,23 @@ function fat_binary() {
     done
     rm -rf "$dir1"
     rm -rf "$dir2"
+}
+
+function title() {
+    YELLOW='\033[0;33m'
+    NC='\033[0m'
+    echo "$YELLOW$@$NC"
+}
+
+function clone_cd() {
+    url=$1
+    ref=$2
+    name=$3
+    if ! [[ -d "$name" ]]; then
+        title "Clone $name"
+        git clone --no-checkout --filter="blob:none" $url "$name"
+    fi
+    cd "$name"
+    git reset HEAD --hard
+    git checkout -f "$ref"
 }

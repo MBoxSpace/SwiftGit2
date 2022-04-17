@@ -120,13 +120,24 @@ public extension Repository {
     }
 
     func addWorkTree(name: String, path: String, head: String? = nil, checkout: Bool = true) -> Result<(), NSError> {
+
+        let checkoutOptions  = UnsafeMutablePointer<git_checkout_options>.allocate(capacity: 1)
+        defer { checkoutOptions.deallocate() }
+        var result = git_checkout_options_init(checkoutOptions, UInt32(GIT_CHECKOUT_OPTIONS_VERSION))
+        guard result == GIT_OK.rawValue else {
+            return .failure(NSError(gitError: result, pointOfFailure: "git_checkout_options_init"))
+        }
+        if !checkout {
+            checkoutOptions.pointee.checkout_strategy = GIT_CHECKOUT_NONE.rawValue
+        }
+
         let options = UnsafeMutablePointer<git_worktree_add_options>.allocate(capacity: 1)
         defer { options.deallocate() }
-        var result = git_worktree_add_options_init(options, UInt32(GIT_WORKTREE_ADD_OPTIONS_VERSION))
+        result = git_worktree_add_options_init(options, UInt32(GIT_WORKTREE_ADD_OPTIONS_VERSION))
         guard result == GIT_OK.rawValue else {
-            return .failure(NSError(gitError: result, pointOfFailure: "git_worktree_add_init_options"))
+            return .failure(NSError(gitError: result, pointOfFailure: "git_worktree_add_options_init"))
         }
-        options.pointee.checkout = checkout ? 1 : 0
+        options.pointee.checkout_options = checkoutOptions.pointee
 
         var reference: OpaquePointer? = nil
         defer {

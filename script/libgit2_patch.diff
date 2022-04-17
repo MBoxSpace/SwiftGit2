@@ -1,5 +1,30 @@
+diff --git a/include/git2.h b/include/git2.h
+index 2961cc3e5..cd7e31e94 100644
+--- a/include/git2.h
++++ b/include/git2.h
+@@ -23,7 +23,6 @@
+ #include "git2/common.h"
+ #include "git2/config.h"
+ #include "git2/credential.h"
+-#include "git2/deprecated.h"
+ #include "git2/describe.h"
+ #include "git2/diff.h"
+ #include "git2/email.h"
+diff --git a/include/git2/common.h b/include/git2/common.h
+index b8c4ad531..bac446da6 100644
+--- a/include/git2/common.h
++++ b/include/git2/common.h
+@@ -22,8 +22,6 @@
+ 
+ #if defined(_MSC_VER) && _MSC_VER < 1800
+ # include <stdint.h>
+-#elif !defined(__CLANG_INTTYPES_H)
+-# include <inttypes.h>
+ #endif
+ 
+ #ifdef DOCURIUM
 diff --git a/src/filebuf.h b/src/filebuf.h
-index 9d53bc307..d4a689b12 100644
+index adbb19936..a5b881b45 100644
 --- a/src/filebuf.h
 +++ b/src/filebuf.h
 @@ -25,8 +25,8 @@
@@ -14,10 +39,10 @@ index 9d53bc307..d4a689b12 100644
  typedef struct git_filebuf git_filebuf;
  struct git_filebuf {
 diff --git a/src/repository.c b/src/repository.c
-index 9b3e9c9e3..edabd7f47 100644
+index 6119c1c70..3aab1aeea 100644
 --- a/src/repository.c
 +++ b/src/repository.c
-@@ -1485,10 +1485,10 @@ done:
+@@ -1550,10 +1550,10 @@ done:
  
  static int check_extensions(git_config *config, int version)
  {

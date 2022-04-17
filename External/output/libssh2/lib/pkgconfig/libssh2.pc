@@ -2,16 +2,16 @@
 # libssh2 installation details
 ###########################################################################
 
-prefix=/Users/whirlwind/Documents/Developer/MBoxGUI3/SwiftGit2/External/output/libssh2
+prefix=/Users/whirlwind/Documents/Developer/MBoxGUI4/SwiftGit2/External/output/libssh2
 exec_prefix=${prefix}
-libdir=${exec_prefix}/lib
+libdir=${prefix}/lib
 includedir=${prefix}/include
 
 Name: libssh2
 URL: https://www.libssh2.org/
-Description: Library for SSH-based communication
+Description: The SSH library
 Version: 1.9.0_DEV
-Requires.private: libssl libcrypto zlib
+Requires.private: libssl,libcrypto,zlib
 Libs: -L${libdir} -lssh2 
 Libs.private: 
 Cflags: -I${includedir}
