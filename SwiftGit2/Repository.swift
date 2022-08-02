@@ -52,6 +52,23 @@ public final class Repository {
         return Result.success(repository)
     }
 
+    public class func discover(_ path: String, acrossFS: Bool = false, ceiling: [String] = []) -> Result<Repository, NSError> {
+        var buf = git_buf(ptr: nil, reserved: 0, size: 0)
+        defer {
+            git_buf_dispose(&buf)
+        }
+        let result = path.withCString { start_path in
+            return ceiling.joined(separator: ":").withCString { ceiling_dirs in
+                return git_repository_discover(&buf, start_path, acrossFS ? 1 : 0, ceiling_dirs)
+            }
+        }
+        guard result == GIT_OK.rawValue,
+              let root = String(bytes: buf.ptr, count: buf.size) else {
+            return Result.failure(NSError(gitError: result, pointOfFailure: "git_repository_discover"))
+        }
+        return Repository.at(URL(fileURLWithPath: root))
+    }
+
     // MARK: - Initializers
 
     /// Create an instance with a libgit2 `git_repository` object.
