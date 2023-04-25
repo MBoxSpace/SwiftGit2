@@ -22,8 +22,8 @@
 
 #if defined(_MSC_VER) && _MSC_VER < 1800
 # include <stdint.h>
-#elif !defined(__CLANG_INTTYPES_H)
-# include <inttypes.h>
+//#elif !defined(__CLANG_INTTYPES_H)
+//# include <inttypes.h>
 #endif
 
 #ifdef DOCURIUM
