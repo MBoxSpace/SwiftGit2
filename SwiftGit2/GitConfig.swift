@@ -142,6 +142,36 @@ public class Config {
         }
     }
 
+    public func strings(for keyPath: String) -> Result<[(value: String, depth: UInt32)]?, NSError> {
+        return keyPath.withCString { name in
+            var iter: OpaquePointer? = nil
+            var result = git_config_multivar_iterator_new(&iter, self.config, name, nil)
+            guard result == GIT_OK.rawValue else {
+                return .failure(NSError(gitError: result, pointOfFailure: "git_config_multivar_iterator_new"))
+            }
+            defer { git_config_iterator_free(iter!) }
+
+            var entry: UnsafeMutablePointer<git_config_entry>! = UnsafeMutablePointer<git_config_entry>.allocate(capacity: 1)
+            defer {
+                // Do not release entry! It will be released by iter
+                // entry.deallocate()
+            }
+            var data = [(value: String, depth: UInt32)]()
+            while (true) {
+                result = git_config_next(&entry, iter!)
+                if result == GIT_ITEROVER.rawValue { break }
+                guard result == GIT_OK.rawValue else {
+                    return .failure(NSError(gitError: result, pointOfFailure: "git_config_next"))
+                }
+                let entryData = entry.pointee
+                let value = String(cString: entryData.value)
+                let depth = entryData.include_depth
+                data.append((value: value, depth: depth))
+            }
+            return .success(data)
+        }
+    }
+
     public func string(for keyPath: String) -> Result<String?, NSError> {
         var value: UnsafePointer<Int8>?
         let result = keyPath.withCString { git_config_get_string(&value, snapshot, $0) }
