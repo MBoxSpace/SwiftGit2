@@ -19,10 +19,6 @@ DerivedData
 *.xcscmblueprint
 *.idea*
 
-External/libgit2*.a
-External/ios-openssl
-External/libgit2-ios
-External/libssh2-ios
 Carthage/
 
 ### fastlane ###
@@ -40,8 +36,5 @@ fastlane/screenshots/screenshots.html
 
 # scan temporary files
 fastlane/test_output
-test_output
-*.dylib
-git2.framework/git2
-External/output/openssl
-External/output/libssh2
+*.a
+External/output/openssl/*/*

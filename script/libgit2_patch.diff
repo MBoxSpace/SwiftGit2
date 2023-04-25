@@ -1,5 +1,5 @@
 diff --git a/include/git2.h b/include/git2.h
-index 2961cc3e5..cd7e31e94 100644
+index 3457e5f04..839d0eaa3 100644
 --- a/include/git2.h
 +++ b/include/git2.h
 @@ -23,7 +23,6 @@
@@ -10,39 +10,11 @@ index 2961cc3e5..cd7e31e94 100644
  #include "git2/describe.h"
  #include "git2/diff.h"
  #include "git2/email.h"
-diff --git a/include/git2/common.h b/include/git2/common.h
-index b8c4ad531..bac446da6 100644
---- a/include/git2/common.h
-+++ b/include/git2/common.h
-@@ -22,8 +22,6 @@
- 
- #if defined(_MSC_VER) && _MSC_VER < 1800
- # include <stdint.h>
--#elif !defined(__CLANG_INTTYPES_H)
--# include <inttypes.h>
- #endif
- 
- #ifdef DOCURIUM
-diff --git a/src/filebuf.h b/src/filebuf.h
-index adbb19936..a5b881b45 100644
---- a/src/filebuf.h
-+++ b/src/filebuf.h
-@@ -25,8 +25,8 @@
- #define GIT_FILEBUF_FSYNC				(1 << 6)
- #define GIT_FILEBUF_DEFLATE_SHIFT		(7)
- 
--#define GIT_FILELOCK_EXTENSION ".lock\0"
--#define GIT_FILELOCK_EXTLENGTH 6
-+#define GIT_FILELOCK_EXTENSION ".git-lock~\0"
-+#define GIT_FILELOCK_EXTLENGTH 11
- 
- typedef struct git_filebuf git_filebuf;
- struct git_filebuf {
-diff --git a/src/repository.c b/src/repository.c
-index 6119c1c70..3aab1aeea 100644
---- a/src/repository.c
-+++ b/src/repository.c
-@@ -1550,10 +1550,10 @@ done:
+diff --git a/src/libgit2/repository.c b/src/libgit2/repository.c
+index 8c41167a1..9e0f12c00 100644
+--- a/src/libgit2/repository.c
++++ b/src/libgit2/repository.c
+@@ -1687,10 +1687,10 @@ done:
  
  static int check_extensions(git_config *config, int version)
  {
@@ -54,4 +26,19 @@ index 6119c1c70..3aab1aeea 100644
 +	// return git_config_foreach_match(config, "^extensions\\.", check_valid_extension, NULL);
  }
  
- int git_repository__extensions(char ***out, size_t *out_len)
+ static int load_objectformat(git_repository *repo, git_config *config)
+diff --git a/src/util/filebuf.h b/src/util/filebuf.h
+index 4a61ae4e3..505a27c58 100644
+--- a/src/util/filebuf.h
++++ b/src/util/filebuf.h
+@@ -25,8 +25,8 @@
+ #define GIT_FILEBUF_FSYNC				(1 << 6)
+ #define GIT_FILEBUF_DEFLATE_SHIFT		(7)
+ 
+-#define GIT_FILELOCK_EXTENSION ".lock\0"
+-#define GIT_FILELOCK_EXTLENGTH 6
++#define GIT_FILELOCK_EXTENSION ".git-lock~\0"
++#define GIT_FILELOCK_EXTLENGTH 11
+ 
+ typedef struct git_filebuf git_filebuf;
+ struct git_filebuf {

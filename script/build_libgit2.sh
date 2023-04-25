@@ -14,6 +14,7 @@ LIBSSH2_DIR="${OUTPUT_DIR}/libssh2"
 MBEDTLS_DIR="${OUTPUT_DIR}/mbedtls"
 LIBGIT2_DIR="${OUTPUT_DIR}/libgit2"
 LIBGIT2_NAME="libgit2.dylib"
+LIBGIT2_VERSION=1.6.4
 
 export PKG_CONFIG_PATH="$LIBSSH2_DIR/lib/pkgconfig:$OPENSSL_DIR/lib/pkgconfig:$PKG_CONFIG_PATH"
 export PKG_CONFIG_LIBSSH2_PREFIX="$LIBSSH2_DIR"
@@ -23,7 +24,9 @@ export PKG_CONFIG_LIBCRYPTO_PREFIX="$OPENSSL_DIR"
 export PATH="${MBEDTLS_DIR}/lib:${PATH}"
 
 cd "External"
-clone_cd git@github.com:libgit2/libgit2.git v1.4.3 libgit2
+
+title "Pull Repository v${LIBGIT2_VERSION}"
+clone_cd git@github.com:libgit2/libgit2.git "v${LIBGIT2_VERSION}" libgit2
 
 # Apply Patch
 title "Apply patch for libgit2"
@@ -47,6 +50,7 @@ function build_git2() {
         -DUSE_GSSAPI:BOOL=ON \
         -DUSE_SSH:BOOL=ON \
         -DCMAKE_OSX_ARCHITECTURES:STRING="${ARCH}" \
+        -DCMAKE_FIND_ROOT_PATH:STRING="${OUTPUT_DIR}" \
         ..
     cmake --build .
 }

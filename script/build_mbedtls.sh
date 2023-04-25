@@ -22,9 +22,12 @@ function build()
     cp -L libmbedcrypto.dylib "${OUTPUT_DIR}/lib/"
 
     install_name_tool -id @rpath/libmbedtls.dylib libmbedtls.dylib
+    install_name_tool -change @rpath/libmbedx509.5.dylib @rpath/libmbedx509.dylib libmbedtls.dylib 
+    install_name_tool -change @rpath/libmbedcrypto.14.dylib @rpath/libmbedcrypto.dylib libmbedtls.dylib 
     cp -L libmbedtls.dylib "${OUTPUT_DIR}/lib/"
 
     install_name_tool -id @rpath/libmbedx509.dylib libmbedx509.dylib
+    install_name_tool -change @rpath/libmbedcrypto.14.dylib @rpath/libmbedcrypto.dylib libmbedx509.dylib 
     cp -L libmbedx509.dylib "${OUTPUT_DIR}/lib/"
 
     cd -
