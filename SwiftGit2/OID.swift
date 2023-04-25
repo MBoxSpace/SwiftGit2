@@ -33,7 +33,7 @@ public struct OID {
     /// Create an instance from a libgit2 `git_oid`.
     init(_ oid: git_oid) {
         self.oid = oid
-        self.length = size_t(GIT_OID_HEXSZ)
+        self.length = size_t(GIT_OID_SHA1_HEXSIZE)
     }
 
     // MARK: - Properties
@@ -42,7 +42,7 @@ public struct OID {
     public let length: size_t
 
     public var isShort: Bool {
-        return length < GIT_OID_HEXSZ
+        return length < GIT_OID_SHA1_HEXSIZE
     }
 
     public var isZero: Bool {
@@ -53,7 +53,7 @@ public struct OID {
 
 extension OID: CustomStringConvertible {
     public var description: String {
-        return desc(length: Int(GIT_OID_HEXSZ))
+        return desc(length: Int(GIT_OID_SHA1_HEXSIZE))
     }
 
     public func desc(length: Int) -> String {
