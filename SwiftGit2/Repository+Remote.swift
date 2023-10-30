@@ -72,7 +72,7 @@ extension Repository {
     public func fetch(_ remote: String? = nil,
                       options: FetchOptions? = nil)
         -> Result<(), NSError> {
-        let remoteName = remote ?? (try? self.trackBranch().get().remoteName) ?? "origin"
+        let remoteName = remote ?? (try? self.trackBranch().get()?.remote) ?? "origin"
         return remoteLookup(named: remoteName) { remote in
             remote.flatMap { pointer in
                 let url = String(cString: git_remote_url(pointer))
@@ -92,16 +92,18 @@ extension Repository {
                      options: FetchOptions? = nil) -> Result<(), NSError> {
         return self.fetch(remote, options: options).flatMap {_ in
             do {
-                var remoteBranch: Branch
+                var remoteBranch: Branch? = nil
                 if let remote = remote, let branch = branch {
                     remoteBranch = try self.remoteBranch(named: "\(remote)/\(branch)").get()
                 } else {
-                    remoteBranch = try self.trackBranch().get()
-                    if let remote = remote {
-                        remoteBranch = try self.remoteBranch(named: "\(remote)/\(remoteBranch.shortName!)").get()
-                    } else if let branch = branch {
-                        remoteBranch = try self.remoteBranch(named: "\(remoteBranch.remoteName!)/\(branch)").get()
+                    let trackBranch = try self.trackBranch().get()
+                    if let remote = remote ?? trackBranch?.remote,
+                       let branch = branch ?? trackBranch?.merge {
+                        remoteBranch = try self.remoteBranch(named: "\(remote)/\(branch)").get()
                     }
+                }
+                guard let remoteBranch = remoteBranch else {
+                    return .failure(NSError(gitError: 1, pointOfFailure: "git_config_get_string", description: "Could not find the upstream branch."))
                 }
                 return self.merge(with: remoteBranch.oid, message: "Merge \(remoteBranch)").flatMap { _ in .success(()) }
             } catch {

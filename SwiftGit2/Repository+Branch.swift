@@ -29,9 +29,21 @@ public extension Repository {
         return reference(named: .branchPrefix + name).map { $0 as! Branch }
     }
 
-    /// Load the remote branch with the given name (e.g., "origin/master").
+    /// Load the remote branch with the given name (e.g., "origin/master"、"master").
     func remoteBranch(named name: String) -> Result<Branch, NSError> {
-        return reference(named: .remotePrefix + name).map { $0 as! Branch }
+        do {
+            let firstItem = name.split(separator: "/").first!.lowercased()
+            let remotes = try self.allRemotes().get().map(\.name)
+            if remotes.contains(where: { $0.lowercased() == firstItem }) {
+                return reference(named: .remotePrefix + name).map { $0 as! Branch }
+            }
+            for remote in remotes {
+                return reference(named: .remotePrefix + remote + "/" + name).map { $0 as! Branch }
+            }
+            return Result.failure(NSError(gitError: GIT_ENOTFOUND.rawValue, pointOfFailure: "git_reference_lookup"))
+        } catch {
+            return .failure(error as NSError)
+        }
     }
 
     /// Load the local/remote branch with the given name (e.g., "master").
@@ -39,23 +51,11 @@ public extension Repository {
         if name.isLongRef {
             return reference(named: name).map { $0 as! Branch }
         }
-        var result = localBranch(named: name)
+        let result = localBranch(named: name)
         if result.isSuccess {
             return result
         }
-        result = remoteBranch(named: name)
-        if result.isSuccess {
-            return result
-        }
-        return self.allRemotes().flatMap { remotes -> Result<Branch, NSError> in
-            for remote in remotes {
-                let branch = remoteBranch(named: "\(remote.name)/\(name)")
-                if branch.isSuccess {
-                    return branch
-                }
-            }
-            return .failure(NSError(gitError: GIT_ENOTFOUND.rawValue, description: "Remote branch `\(name)` does not exist."))
-        }
+        return remoteBranch(named: name)
     }
 
     private func createBranch(_ name: String, oid: OID, force: Bool = false) -> Result<Branch, NSError> {
@@ -152,25 +152,23 @@ public extension Repository {
         return .success(())
     }
 
-    func setTrackBranch(local: String, remote: String? = nil) -> Result<(), NSError> {
-        var pointer: OpaquePointer? = nil
-        var result = git_branch_lookup(&pointer, self.pointer, local, GIT_BRANCH_LOCAL)
-        defer { git_reference_free(pointer) }
-
-        guard result == GIT_OK.rawValue else {
-            return Result.failure(NSError(gitError: result, pointOfFailure: "git_branch_lookup"))
+    func setTrackBranch(local: String, target: String?, remote: String = "origin") -> Result<(), NSError> {
+        do {
+            if let target = target {
+                try self.config.set(string: remote, for: "branch.\(local).remote").get()
+                try self.config.set(string: target.longBranchRef, for: "branch.\(local).merge").get()
+            } else {
+                try self.config.delete(keyPath: "branch.\(local).remote").get()
+                try self.config.delete(keyPath: "branch.\(local).merge").get()
+            }
+            return .success(())
+        } catch {
+            return .failure(error as NSError)
         }
-
-        result = git_branch_set_upstream(pointer, remote)
-        guard result == GIT_OK.rawValue else {
-            return Result.failure(NSError(gitError: result, pointOfFailure: "git_branch_set_upstream"))
-        }
-
-        return .success(())
     }
 
-    func trackBranch() -> Result<Branch, NSError> {
-        return HEAD().flatMap({ ref -> Result<Branch, NSError> in
+    func trackBranch() -> Result<(remote: String, merge: String)?, NSError> {
+        return HEAD().flatMap({ ref -> Result<(remote: String, merge: String)?, NSError> in
             guard let branch = ref as? Branch else {
                 return .failure(NSError(gitError: -1, pointOfFailure: "git_branch_lookup"))
             }
@@ -178,26 +176,15 @@ public extension Repository {
         })
     }
 
-    func trackBranch(local: String) -> Result<Branch, NSError> {
-        var pointer: OpaquePointer? = nil
-        var result = git_branch_lookup(&pointer, self.pointer, local, GIT_BRANCH_LOCAL)
-        defer { git_reference_free(pointer) }
-
-        guard result == GIT_OK.rawValue else {
-            return Result.failure(NSError(gitError: result, pointOfFailure: "git_branch_lookup"))
-        }
-
-        var track: OpaquePointer? = nil
-        result = git_branch_upstream(&track, pointer)
-        defer { git_reference_free(track) }
-        guard result == GIT_OK.rawValue else {
-            return Result.failure(NSError(gitError: result, pointOfFailure: "git_branch_upstream"))
-        }
-
-        if let track = track, let branch = Branch(track) {
-            return Result.success(branch)
-        } else {
-            return .failure(NSError(gitError: -1, pointOfFailure: "git_branch_name or git_reference_resolve"))
+    func trackBranch(local: String) -> Result<(remote: String, merge: String)?, NSError> {
+        do {
+            guard let remoteName = try self.config.string(for: "branch.\(local).remote").get(),
+                  let mergeName = try self.config.string(for: "branch.\(local).merge").get() else {
+                return .success(nil)
+            }
+            return .success((remote: remoteName, merge: mergeName))
+        } catch {
+            return Result.failure(error as NSError)
         }
     }
 
